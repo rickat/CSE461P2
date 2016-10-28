@@ -93,6 +93,7 @@ public class CSE461P2 {
 			    	readDataText = readDataText.substring(0, idx - 1) + "0" + readDataText.substring(idx);
 			    	// get the first line
 			    	first_line = readDataText.substring(0, idx);
+			    	System.out.println(first_line);
 			    	first = false;
 			    }
 			    clientData.append(readDataText);
