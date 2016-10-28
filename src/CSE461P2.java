@@ -30,7 +30,12 @@ public class CSE461P2 {
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 		System.out.println("hello world");
-		DatagramSocket serverSocket = new DatagramSocket(54321); 
+		if (args.length > 1) {
+			System.err.println("too many args");;
+			return;
+		}
+		int port_num = Integer.parseInt(args[0]);
+		DatagramSocket serverSocket = new DatagramSocket(port_num); 
 		while(true){
 			byte[] receiveData = new byte[24];
 			DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
