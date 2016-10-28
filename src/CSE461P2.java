@@ -59,11 +59,11 @@ public class CSE461P2 {
 	static class Client_handler implements Runnable {
 		
 		public ServerSocket serverSocket;
-		public Socket socket;
+		public Socket clientSocket;
 		
 		public Client_handler(ServerSocket serverSocket, Socket socket) {
 			serverSocket = serverSocket;
-			socket = socket;
+			clientSocket = socket;
 		}
 
 		@Override
@@ -74,8 +74,30 @@ public class CSE461P2 {
 		}
 
 		// get request from the client
-		public void client_to_proxy() throws IOException {
-			
+		public StringBuilder client_to_proxy() throws IOException {
+			int read = -1;
+			byte[] buffer = new byte[5*1024]; // a read buffer of 5KiB
+			byte[] readData;
+			StringBuilder clientData = new StringBuilder();
+			String readDataText;
+			boolean first = true;
+			String first_line;
+			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
+			    readData = new byte[read];
+			    System.arraycopy(buffer, 0, readData, 0, read);
+			    readDataText = new String(readData,"UTF-8"); // assumption that client sends data UTF-8 encoded
+			    // System.out.println("message part recieved:" + redDataText);
+			    if (first) {
+			    	int idx = readDataText.indexOf("\r\n\r\n");
+			    	// change 1.1 to 1.0
+			    	readDataText = readDataText.substring(0, idx - 1) + "0" + readDataText.substring(idx);
+			    	// get the first line
+			    	first_line = readDataText.substring(0, idx);
+			    	first = false;
+			    }
+			    clientData.append(readDataText);
+			}
+			return clientData;
 		}
 		
 		// get client's request to the server
