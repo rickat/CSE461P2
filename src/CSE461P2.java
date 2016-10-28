@@ -51,18 +51,19 @@ public class CSE461P2 {
 				e1.printStackTrace();
 			}
 			new Thread(
-					new Client_handler(client)
+					new Client_handler(client, serverSocket)
 						).start(); 
 		  	}
 	}
 	
 	static class Client_handler implements Runnable {
 		
-		// public ServerSocket serverSocket;
+		public ServerSocket serverSocket;
 		public Socket clientSocket;
 		
-		public Client_handler(Socket socket) {
+		public Client_handler(Socket socket, ServerSocket serverSocket) {
 			clientSocket = socket;
+			serverSocket = serverSocket;
 		}
 
 		@Override
@@ -71,22 +72,24 @@ public class CSE461P2 {
 			//generate_secret();
 			StringBuilder sb;
 			try {
-				sb = client_to_proxy();
+				sb = client_to_proxy_to_server();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 
-		// get request from the client
-		public StringBuilder client_to_proxy() throws IOException {
+		// get request from the client and then
+		// get client's request to the server and receive the server's respond
+		// then get the server's respond
+		public StringBuilder client_to_proxy_to_server() throws IOException {
 			int read = -1;
 			byte[] buffer = new byte[5*1024]; // a read buffer of 5KiB
 			byte[] readData;
 			StringBuilder clientData = new StringBuilder();
 			String readDataText;
 			boolean first = true;
-			String first_line;
+			String first_line = null;
 			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
 			    readData = new byte[read];
 			    System.arraycopy(buffer, 0, readData, 0, read);
@@ -103,37 +106,17 @@ public class CSE461P2 {
 			    }
 			    clientData.append(readDataText);
 			}
-			return clientData;
-		}
-		
-		// get client's request to the server and receive the server's respond
-		public StringBuilder proxy_to_server(StringBuilder sb) throws IOException {
+			// find the destination
+			int dns_start = first_line.indexOf("http");
+			int dns_end = first_line.indexOf(" ", dns_start);
+			String dest = first_line.substring(dns_start, dns_end);
+			InetAddress IPAddress = InetAddress.getByName(dest);
 			
-			
-			int read = -1;
-			byte[] buffer = new byte[5*1024]; // a read buffer of 5KiB
-			byte[] readData;
-			StringBuilder serverData = new StringBuilder();
-			String readDataText;
-			boolean first = true;
-			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
-			    readData = new byte[read];
-			    System.arraycopy(buffer, 0, readData, 0, read);
-			    readDataText = new String(readData,"UTF-8"); // assumption that client sends data UTF-8 encoded
-			    // System.out.println("message part recieved:" + redDataText);
-			    if (first) {
-			    	int idx = readDataText.indexOf("\r\n\r\n");
-			    	// change 1.1 to 1.0
-			    	readDataText = readDataText.substring(0, idx - 1) + "0" + readDataText.substring(idx);
-			    	first = false;
-			    }
-			    serverData.append(readDataText);
-			}
-			return serverData;
+			return null;
 		}
 		
 		// get data from the server and send that to client
-		public void proxy_to_client() throws IOException {
+		public void proxy_to_client(StringBuilder sb) throws IOException {
 			
 		}
 		
