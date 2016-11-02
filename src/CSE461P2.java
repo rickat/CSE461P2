@@ -93,8 +93,9 @@ public class CSE461P2 {
 			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
 			    readData = new byte[read];
 			    System.arraycopy(buffer, 0, readData, 0, read);
-			    readDataText = new String(readData,"UTF-8"); // assumption that client sends data UTF-8 encoded
+			    readDataText = new String(readData,"US-ASCII"); // assumption that client sends data UTF-8 encoded
 			    // System.out.println("message part recieved:" + redDataText);
+			    // CR 13; LF 10 in ASCII
 			    if (first) {
 			    	int idx = readDataText.indexOf("\r\n\r\n");
 			    	// change 1.1 to 1.0
