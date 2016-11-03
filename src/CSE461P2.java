@@ -98,34 +98,42 @@ public class CSE461P2 {
 			    if (!header_over) {
 			    	int get_int = read;
 			    	for (int i = 0; i < read; i++) {
+			    		// we see a \r maybe the end
 				    	if (buffer[i] == 13 && !r1) {
 				    		r1 = true;
 				    	} else if (buffer[i] == 13 && r1 && n1 && !r2) {
+				    		// we see a \r immediately after \r\n, may be the end
 				    		r2 = true;
 				    	} else if (buffer[i] == 10 && r1 && !n1) {
+				    		// we see a \n immediately after \r, may be the end
 				    		n1 = true;
 				    	} else if (buffer[i] == 13 && r1 && n1 && r2 && !n2) {
+				    		// we see a \n immediately after \r\n\r, must be the end
 				    		n2 = true;
 				    		header_over = true;
+				    		// set the header distance
 				    		get_int = i + 1;
 				    	} else if (r1 && buffer[i] != 10) {
+				    		// after a \r is not a \n, not the end
 				    		r1 = false;
 				    	} else if (r1 && n1 && buffer[i] != 13) {
+				    		// after a \r\n is not a \r, not the end
 				    		r1 = false;
 				    		n1 = false;
 				    	} else if (r1 && n1 && r2 && buffer[i] != 10) {
+				    		// after a \r\n\r is not a \n, not the end
 				    		r1 = false;
 				    		n1 = false;
 				    		r2 = false;
 				    	}
 				    }
-				    //buffer contains request
+				    //buffer contains request header
 				    readData = new byte[get_int];
-				    if (read - get_int > 0) {
+				    if (read - get_int > 0) {  // there is leftover for the payload part, header is done
 				    	remainData = new byte[read - get_int];
 				    }
 				    System.arraycopy(buffer, 0, readData, 0, get_int);
-				    if (read - get_int > 0) {
+				    if (read - get_int > 0) {  // copy the payload to payload part
 				    	System.arraycopy(buffer, get_int, remainData, 0, read - get_int);
 				    }
 				    // put the header into a string
@@ -136,6 +144,7 @@ public class CSE461P2 {
 			    	// the header is over, put data directly into the payload
 			    	byte[] payload_buf = new byte[read];
 			    	System.arraycopy(buffer, 0, payload_buf, 0, read);
+			    	// combine the payload segments
 			    	remainData = twoArrayToOne(remainData, payload_buf);
 			    }
 			    
