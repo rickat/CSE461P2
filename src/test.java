@@ -76,6 +76,11 @@ public class test {
 		System.out.println(test_string);  // testing output
 		System.out.println(port_num);  // testing output
 		System.out.println("end");  // testing output
+		
+		// send back 200 OK
+		
+		String okMessage = new String("HTTP/1.0 200 OK\r\n\r\n");
+		String notOkMessage = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 	}
 	
 	public static int get_end_line_index(String s, int start) {
@@ -90,11 +95,4 @@ public class test {
 		}
 		return end_host;
 	}
-	
-	public static String getFrist(String s) {
-		String res = "";
-		
-		return res;
-	}
-
 }
