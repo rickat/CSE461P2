@@ -25,7 +25,7 @@ public class test {
 		int start_host = test_string_h.indexOf("host");
 		int end_host = get_end_line_index(test_string_h, start_host);
 		System.out.println(test_string_h.substring(start_host, end_host));
-		int change_version = test_string_h.indexOf("GET");
+		int change_version = test_string_h.indexOf("get");
 		System.out.println(change_version);
 		int end_version = get_end_line_index(test_string_h, change_version);
 		
