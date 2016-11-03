@@ -28,10 +28,8 @@ public class CSE461P2 {
 	 * @throws IOException 
 	 */
 	public static void main(String[] args) throws IOException {
-		// TODO Auto-generated method stub
-		System.out.println("hello world");
 		if (args.length > 1) {
-			System.err.println("too many args");;
+			System.err.println("too many args");
 			return;
 		}
 		int port_num = Integer.parseInt(args[0]);
@@ -91,13 +89,14 @@ public class CSE461P2 {
 			boolean first = true;
 			String first_line = null;
 			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
+				//buffer contains request
 			    readData = new byte[read];
 			    System.arraycopy(buffer, 0, readData, 0, read);
-			    readDataText = new String(readData,"US-ASCII"); // assumption that client sends data UTF-8 encoded
-			    // System.out.println("message part recieved:" + redDataText);
+			    readDataText = new String(readData,"US-ASCII"); // assumption that client sends ASCII encoded
+			    // System.out.println("message part received:" + redDataText);
 			    // CR 13; LF 10 in ASCII
 			    if (first) {
-			    	int idx = readDataText.indexOf("\r\n\r\n");
+			    	int idx = readDataText.indexOf("\r\n");
 			    	// change 1.1 to 1.0
 			    	readDataText = readDataText.substring(0, idx - 1) + "0" + readDataText.substring(idx);
 			    	// get the first line
@@ -108,9 +107,11 @@ public class CSE461P2 {
 			    clientData.append(readDataText);
 			}
 			// find the destination
-			int dns_start = first_line.indexOf("http");
-			int dns_end = first_line.indexOf(" ", dns_start);
-			String dest = first_line.substring(dns_start, dns_end);
+			// should be case insensitive
+			String low_first_line = first_line.toLowerCase();
+			int dns_start = low_first_line.indexOf("http");
+			int dns_end = low_first_line.indexOf(" ", dns_start);
+			String dest = low_first_line.substring(dns_start, dns_end);
 			InetAddress IPAddress = InetAddress.getByName(dest);
 			
 			return null;
