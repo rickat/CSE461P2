@@ -84,15 +84,61 @@ public class CSE461P2 {
 			int read = -1;
 			byte[] buffer = new byte[5*1024]; // a read buffer of 5KiB
 			byte[] readData;
+			byte[] remainData = null;
+			// byte[] payload;
+			boolean header_over = false;
+			boolean r1 = false;
+			boolean r2 = false;
+			boolean n1 = false;
+			boolean n2 = false;
 			StringBuilder clientData = new StringBuilder();
 			String readDataText;
 			while ((read = clientSocket.getInputStream().read(buffer)) > -1) {
-				//buffer contains request
-			    readData = new byte[read];
-			    System.arraycopy(buffer, 0, readData, 0, read);
-			    readDataText = new String(readData,"US-ASCII"); // assumption that client sends ASCII encoded
-			    // CR 13; LF 10 in ASCII
-			    clientData.append(readDataText);
+			    // when we haven't done reading the header
+			    if (!header_over) {
+			    	int get_int = read;
+			    	for (int i = 0; i < read; i++) {
+				    	if (buffer[i] == 13 && !r1) {
+				    		r1 = true;
+				    	} else if (buffer[i] == 13 && r1 && n1 && !r2) {
+				    		r2 = true;
+				    	} else if (buffer[i] == 10 && r1 && !n1) {
+				    		n1 = true;
+				    	} else if (buffer[i] == 13 && r1 && n1 && r2 && !n2) {
+				    		n2 = true;
+				    		header_over = true;
+				    		get_int = i + 1;
+				    	} else if (r1 && buffer[i] != 10) {
+				    		r1 = false;
+				    	} else if (r1 && n1 && buffer[i] != 13) {
+				    		r1 = false;
+				    		n1 = false;
+				    	} else if (r1 && n1 && r2 && buffer[i] != 10) {
+				    		r1 = false;
+				    		n1 = false;
+				    		r2 = false;
+				    	}
+				    }
+				    //buffer contains request
+				    readData = new byte[get_int];
+				    if (read - get_int > 0) {
+				    	remainData = new byte[read - get_int];
+				    }
+				    System.arraycopy(buffer, 0, readData, 0, get_int);
+				    if (read - get_int > 0) {
+				    	System.arraycopy(buffer, get_int, remainData, 0, read - get_int);
+				    }
+				    // put the header into a string
+				    readDataText = new String(readData,"US-ASCII"); // assumption that client sends ASCII encoded
+				    // CR 13; LF 10 in ASCII
+				    clientData.append(readDataText);
+			    } else {
+			    	// the header is over, put data directly into the payload
+			    	byte[] payload_buf = new byte[read];
+			    	System.arraycopy(buffer, 0, payload_buf, 0, read);
+			    	remainData = twoArrayToOne(remainData, payload_buf);
+			    }
+			    
 			}
 			String clientString = clientData.toString();
 			
@@ -151,7 +197,8 @@ public class CSE461P2 {
 			// end finding info about server and changing info
 			// NOTE: Host Name: name
 			//	 	 Port     : port_num
-			// 		 Message  : clientString
+			// 		 Header   : clientString
+			//		 Payload  : remainData
 			//
 			// To Do: 1. Establish connection with the host
 			//		  2. If succeeded, send a 200 back to client, otherwise send 502
@@ -171,6 +218,16 @@ public class CSE461P2 {
 		// get data from the server and send that to client
 		public void proxy_to_client(StringBuilder sb) throws IOException {
 			
+		}
+		
+		// connect two arrays together
+		public static byte[] twoArrayToOne(byte[] first, byte[] second) {
+			int flen = first.length;
+			int slen = second.length;
+			byte[] res = new byte[flen + slen];
+			System.arraycopy(first, 0, res, 0, flen);
+			System.arraycopy(second, 0, res, flen, slen);
+			return res;
 		}
 		
 		// a method that tells the ending of each line in the header

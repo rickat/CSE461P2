@@ -81,6 +81,11 @@ public class test {
 		
 		String okMessage = new String("HTTP/1.0 200 OK\r\n\r\n");
 		String notOkMessage = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+		
+		byte b = (byte)'A';
+		byte c = 65;
+		System.out.println(b);
+		System.out.println((char)c);
 	}
 	
 	public static int get_end_line_index(String s, int start) {
