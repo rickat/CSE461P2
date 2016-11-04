@@ -159,22 +159,22 @@ public class Proxy {
 			int http_version = request_line.indexOf("http/1.1");
 			port_start = request_line.lastIndexOf(":");
 			if(port_start != -1) {
-				String port;
 				// if start with https
 				if (https != -1) {
-
-					// the ":" is not the one after https
+                    // the ":" is not the one after https
 					if (port_start != https + 5) {
-						port = name.substring(port_start + 1, http_version).trim();
+						String port = name.substring(port_start + 1, http_version).trim();
+						port_num = Integer.parseInt(port);
 					}
 				} else if(http != -1) {
 					if (port_start != https + 4) {
-						port = name.substring(port_start + 1, http_version).trim();
+						String port = name.substring(port_start + 1, http_version).trim();
+						port_num = Integer.parseInt(port);
 					}
 				} else { //ip address instead of host name
-					port = name.substring(port_start + 1, http_version).trim();
+					String port = name.substring(port_start + 1, http_version).trim();
+					port_num = Integer.parseInt(port);
 				}
-				port_num = Integer.parseInt(port);
 			}
 			
 			// if start with http
