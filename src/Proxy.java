@@ -188,7 +188,7 @@ public class Proxy {
 			// change http version number
 			int version_num = clientString_h.indexOf("http/1.1");
 			assert(version_num != -1);
-			clientString = clientString.substring(0, version_num + 7) + "0" + clientString.substring(version_num + 4);
+			clientString = clientString.substring(0, version_num + 7) + "0" + clientString.substring(version_num + 8);
 			// end change version number
 
 			// change keep alive
@@ -209,7 +209,8 @@ public class Proxy {
 
 
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-
+            ByteBuffer sendData = ByteBuffer.allocate(clientString.length());
+            
 			String okMessage = new String("HTTP/1.0 200 OK\r\n\r\n");
 			String notOkMessage = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 
