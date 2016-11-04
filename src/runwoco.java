@@ -122,6 +122,8 @@ public class runwoco {
 				// append cur string -> string builder
 				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
 				clientData.append(curString);
+				System.out.println(curString);
+				System.out.println(clientData.toString());
 			}
 			String clientString = clientData.toString();
 			System.out.println(clientString);
