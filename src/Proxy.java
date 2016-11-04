@@ -64,7 +64,7 @@ public class Proxy {
 
 		@Override
 		public void run() {
-			StringBuilder sb;
+			ByteBuffer sb;
 			try {
 				sb = client_to_proxy_to_server();
 			} catch (IOException e) {
@@ -75,7 +75,7 @@ public class Proxy {
 		// get request from the client and then
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
-		public StringBuilder client_to_proxy_to_server() throws IOException {
+		public ByteBuffer client_to_proxy_to_server() throws IOException {
 			byte[] buffer = new byte[1]; // read header one by one until reaching /r/n/r/n
 			boolean header_over = false; // header_over = r1&n1&r2&n2
 			boolean r1 = false; //check the first "\r" in "\r\n\r\n"
@@ -146,6 +146,9 @@ public class Proxy {
 				port_num = Integer.parseInt(port);
 				name = name.substring(0, port_start).trim();
 			}
+			// strip out host
+			name = name.substring(5);
+			name = name.trim();
 			// end get host name
 
 			// find the version of http
@@ -154,6 +157,10 @@ public class Proxy {
 			int end_version = get_end_line_index(clientString_h, change_version);
 			String request_line = clientString_h.substring(change_version, end_version);
 			request_line = request_line.trim();
+
+
+
+
 			int https = request_line.indexOf("https");
 			int http = request_line.indexOf("http");
 			int http_version = request_line.indexOf("http/1.1");
@@ -161,7 +168,7 @@ public class Proxy {
 			if(port_start != -1) {
 				// if start with https
 				if (https != -1) {
-                    // the ":" is not the one after https
+					// the ":" is not the one after https
 					if (port_start != https + 5) {
 						String port = name.substring(port_start + 1, http_version).trim();
 						port_num = Integer.parseInt(port);
@@ -176,7 +183,7 @@ public class Proxy {
 					port_num = Integer.parseInt(port);
 				}
 			}
-			
+
 			// if start with http
 			// check if it's https. if it's https, default port_num is 443 unless
 			// the user specified the port number already
@@ -184,7 +191,11 @@ public class Proxy {
 			if (https != -1 && port_num == 80) {
 				port_num = 443;
 			}
-
+			//print request line
+			InetAddress address = InetAddress.getByName(name); 
+			System.out.println("Proxy listening on " + address.getHostAddress() + ":" + port_num);
+			String request_line_2 = clientString.substring(change_version, end_version);
+			System.out.println(request_line_2.trim());
 			// change http version number
 			int version_num = clientString_h.indexOf("http/1.1");
 			assert(version_num != -1);
@@ -195,6 +206,7 @@ public class Proxy {
 			int status_start = clientString_h.indexOf("keep-alive");
 			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
 			// end change keep alive
+
 			// end finding info about server and changing info
 			// NOTE: Host Name: name
 			//	 	 Port     : port_num
@@ -206,14 +218,33 @@ public class Proxy {
 			//		  3. Send clientString to host via a SocketChannel (DNS of name and port at port_num)
 			//		  4. Receive host's response via SocktChannel
 
-
-
+			// string -> bytebuffer
+			ByteBuffer sendData = ByteBuffer.allocate(clientString.length());
+			for(int i = 0; i < clientString.length();i++){
+				char cur_char = clientString.charAt(i);
+				sendData.putChar(cur_char);
+			}
+			//send the data
+			Socket proxy_to_server = new Socket(name, port_num);
+			OutputStream out = proxy_to_server.getOutputStream(); 
+			DataOutputStream dos = new DataOutputStream(out);
+			dos.write(sendData.array(), 0, clientString.length());
+			String return_message;
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-            ByteBuffer sendData = ByteBuffer.allocate(clientString.length());
-            
-			String okMessage = new String("HTTP/1.0 200 OK\r\n\r\n");
-			String notOkMessage = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+			if(proxy_to_server.isConnected()) {
+				return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
 
+			} else {
+				return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+			}
+			OutputStream out_to_client = clientSocket.getOutputStream(); 
+			DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
+			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
+			for(int i = 0;i<return_message.length();i++){
+				char temp = return_message.charAt(i);
+				send_data_client.putChar(temp);
+			}
+			dos_to_client.write(send_data_client.array(), 0, return_message.length());
 			return null;
 		}
 
