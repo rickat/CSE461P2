@@ -118,8 +118,8 @@ public class Proxy {
 				// append cur string -> string builder
 				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
 				clientData.append(curString);
-            }
-            String clientString = clientData.toString();
+			}
+			String clientString = clientData.toString();
 
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
@@ -137,9 +137,9 @@ public class Proxy {
 			// default port num is 80
 			int port_num = 80;
 			// see if port exists
-		    int port_start = name.indexOf(":");
-		    // if we didn't find ":", then using default port num
-		    // otherwise, using specified port num and update name
+			int port_start = name.indexOf(":");
+			// if we didn't find ":", then using default port num
+			// otherwise, using specified port num and update name
 			if (port_start != -1) {
 				// get the client specified port number instead of using default
 				String port = name.substring(port_start + 1).trim();
@@ -152,26 +152,48 @@ public class Proxy {
 			// get the line with the command GET
 			int change_version = clientString_h.indexOf("get");
 			int end_version = get_end_line_index(clientString_h, change_version);
-			String get_line = clientString_h.substring(change_version, end_version);
+			String request_line = clientString_h.substring(change_version, end_version);
+			request_line = request_line.trim();
+			int https = request_line.indexOf("https");
+			int http = request_line.indexOf("http");
+			int http_version = request_line.indexOf("http/1.1");
+			port_start = request_line.lastIndexOf(":");
+			if(port_start != -1) {
+				String port;
+				// if start with https
+				if (https != -1) {
+
+					// the ":" is not the one after https
+					if (port_start != https + 5) {
+						port = name.substring(port_start + 1, http_version).trim();
+					}
+				} else if(http != -1) {
+					if (port_start != https + 4) {
+						port = name.substring(port_start + 1, http_version).trim();
+					}
+				} else { //ip address instead of host name
+					port = name.substring(port_start + 1, http_version).trim();
+				}
+				port_num = Integer.parseInt(port);
+			}
+			
+			// if start with http
 			// check if it's https. if it's https, default port_num is 443 unless
 			// the user specified the port number already
-			if (get_line.indexOf("https") != -1 && port_num == 80) {
+
+			if (https != -1 && port_num == 80) {
 				port_num = 443;
 			}
 
-			// change version number
-			int version_num = get_line.indexOf("1.1");
-			if (version_num != -1) {
-				version_num += change_version;
-			}
-			clientString = clientString.substring(0, version_num + 2) + "0" + clientString.substring(version_num + 3);
+			// change http version number
+			int version_num = clientString_h.indexOf("http/1.1");
+			assert(version_num != -1);
+			clientString = clientString.substring(0, version_num + 7) + "0" + clientString.substring(version_num + 4);
 			// end change version number
 
 			// change keep alive
-			int status_start = clientString_h.indexOf("connection");
-			int status_end = get_end_line_index(clientString_h, status_start);
-			String new_status = "Connection: close";
-			clientString = clientString.substring(0, status_start) + new_status + clientString.substring(status_end);
+			int status_start = clientString_h.indexOf("keep-alive");
+			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
 			// end change keep alive
 			// end finding info about server and changing info
 			// NOTE: Host Name: name
