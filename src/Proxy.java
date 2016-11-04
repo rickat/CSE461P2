@@ -33,12 +33,13 @@ public class Proxy {
 			System.err.println("too many args");
 			return;
 		}
-		int port_num = Integer.parseInt(args[0]);
+		//int port_num = Integer.parseInt(args[0]);
 		ServerSocket serverSocket = null;
 		try {
-			serverSocket = new ServerSocket(port_num);
+			//serverSocket = new ServerSocket(port_num);
+			serverSocket = new ServerSocket(4237);
 		} catch (IOException e) {
-			System.out.println("Could not listen on port " + port_num);
+			System.out.println("Could not listen on port " + 4237);
 			System.exit(-1);
 		}
 		while(true){
