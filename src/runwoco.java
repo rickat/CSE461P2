@@ -34,7 +34,7 @@ public class runwoco {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 42239;
+		int port_num = 22222;
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
@@ -85,48 +85,68 @@ public class runwoco {
 			boolean n2 = false; //check the second "\n" in "\r\n\r\n"
 			// StringBuilder to build header
 			// reasons why using StringBuilder: thread safe
-			StringBuilder clientData = new StringBuilder();
+			// StringBuilder clientData = new StringBuilder();
 			// read until header_over turn into true, send header ASAP
 			// Then, we can read and send payload
 			
 			// TOTALLY FAILED TO READ OR FAILED TO EXIT THE LOOP
-			while (!header_over && clientSocket.getInputStream().read(buffer) > -1) {
+			StringBuffer sb = new StringBuffer();
+			StringBuffer clientData = new StringBuffer();
+			while (true) {
 				// System.out.println("enter");
-				// we see a \r maybe the end
-				if (buffer[0] == 13 && !r1) {
-					r1 = true;
-				} else if (buffer[0] == 13 && r1 && n1 && !r2) {
-					// we see a \r immediately after \r\n, may be the end
-					r2 = true;
-				} else if (buffer[0] == 10 && r1 && !n1) {
-					// we see a \n immediately after \r, may be the end
-					n1 = true;
-				} else if (buffer[0] == 13 && r1 && n1 && r2 && !n2) {
-					// we see a \n immediately after \r\n\r, must be the end
-					n2 = true;
-					header_over = true; //now we have all the header!
-				} else if (r1 && buffer[0] != 10) {
-					// after a \r is not a \n, not the end
-					r1 = false;
-				} else if (r1 && n1 && buffer[0] != 13) {
-					// after a \r\n is not a \r, not the end
-					r1 = false;
-					n1 = false;
-				} else if (r1 && n1 && r2 && buffer[0] != 10) {
-					// after a \r\n\r is not a \n, not the end
-					r1 = false;
-					n1 = false;
-					r2 = false;
+				byte b = (byte)clientSocket.getInputStream().read();
+				sb.append((char)b);
+				if (b == '\n') {
+					String s = sb.toString();
+					System.out.println(s);
+					clientData.append(s);
+					if (s.equals(new String(new char[] {'\r','\n'}))) {
+						break;
+					} else {
+						sb = new StringBuffer();
+					}
 				}
+				// we see a \r maybe the end
+				// char by = (char) buffer[0];
+//				if (by == '\r' && !r1) {
+//					System.out.println("found a r1");
+//					r1 = true;
+//				} else if (by == '\r' && r1 && n1 && !r2) {
+//					// we see a \r immediately after \r\n, may be the end
+//					System.out.println("found a r2");
+//					r2 = true;
+//				} else if (by == '\n' && r1 && !n1) {
+//					// we see a \n immediately after \r, may be the end
+//					System.out.println("found a n1");
+//					n1 = true;
+//				} else if (by == '\n' && r1 && n1 && r2 && !n2) {
+//					// we see a \n immediately after \r\n\r, must be the end
+//					System.out.println("found a n2");
+//					n2 = true;
+//					header_over = true; //now we have all the header!
+//					System.out.println("found rnrn");
+//				} else if (r1 && by != '\n') {
+//					// after a \r is not a \n, not the end
+//					r1 = false;
+//				} else if (r1 && n1 && by != '\r') {
+//					// after a \r\n is not a \r, not the end
+//					r1 = false;
+//					n1 = false;
+//				} else if (r1 && n1 && r2 && by != '\n') {
+//					// after a \r\n\r is not a \n, not the end
+//					r1 = false;
+//					n1 = false;
+//					r2 = false;
+//				}
 				// convert cur byte -> cur string
 				// append cur string -> string builder
-				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
-				clientData.append(curString);
-				System.out.println(curString);
-				System.out.println(clientData.toString());
+//				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
+//				clientData.append(b);
+//				System.out.println(curString);
+//				System.out.println(clientData.toString());
 			}
 			String clientString = clientData.toString();
-			System.out.println(clientString);
+			System.out.println(clientString.toString());
 			System.out.println("Apple");
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
@@ -153,8 +173,7 @@ public class runwoco {
 				port_num = Integer.parseInt(port);
 				name = name.substring(0, port_start).trim();
 			}
-			// strip out host
-			name = name.substring(5);
+			System.out.println(name);
 			name = name.trim();
 			// end get host name
 
@@ -183,7 +202,7 @@ public class runwoco {
 						port_num = Integer.parseInt(port);
 					}
 				} else if(http != -1) {
-					if (port_start != https + 4) {
+					if (port_start != http + 4) {
 						String port = name.substring(port_start + 1, http_version).trim();
 						port_num = Integer.parseInt(port);
 					}
@@ -215,7 +234,10 @@ public class runwoco {
 			int status_start = clientString_h.indexOf("keep-alive");
 			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
 			// end change keep alive
-
+			System.out.println("\n" + clientString);
+			System.out.println(name);
+			System.out.println(host_name);
+			System.out.println(port_num);
 			// end finding info about server and changing info
 			// NOTE: Host Name: name
 			//	 	 Port     : port_num
@@ -231,7 +253,7 @@ public class runwoco {
 			ByteBuffer sendData = ByteBuffer.allocate(clientString.length());
 			for(int i = 0; i < clientString.length();i++){
 				char cur_char = clientString.charAt(i);
-				sendData.putChar(cur_char);
+				sendData.put((byte) cur_char);
 			}
 			//send the data
 			Socket proxy_to_server = new Socket(name, port_num);
@@ -251,7 +273,7 @@ public class runwoco {
 			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
 			for(int i = 0;i<return_message.length();i++){
 				char temp = return_message.charAt(i);
-				send_data_client.putChar(temp);
+				send_data_client.put((byte) temp);
 			}
 			dos_to_client.write(send_data_client.array(), 0, return_message.length());
 			return null;

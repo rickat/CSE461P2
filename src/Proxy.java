@@ -37,9 +37,9 @@ public class Proxy {
 		ServerSocket serverSocket = null;
 		try {
 			//serverSocket = new ServerSocket(port_num);
-			serverSocket = new ServerSocket(4237);
+			serverSocket = new ServerSocket(42373);
 		} catch (IOException e) {
-			System.out.println("Could not listen on port " + 4237);
+			System.out.println("Could not listen on port " + 42373);
 			System.exit(-1);
 		}
 		while(true){
@@ -66,6 +66,7 @@ public class Proxy {
 		@Override
 		public void run() {
 			ByteBuffer sb;
+			System.out.println("here");
 			try {
 				sb = client_to_proxy_to_server();
 			} catch (IOException e) {
@@ -88,28 +89,30 @@ public class Proxy {
 			StringBuilder clientData = new StringBuilder();
 			// read until header_over turn into true, send header ASAP
 			// Then, we can read and send payload
-			while (!header_over && clientSocket.getInputStream().read(buffer) > -1) {
+			while (!header_over) {
 				// we see a \r maybe the end
-				if (buffer[0] == 13 && !r1) {
+				clientSocket.getInputStream().read(buffer);
+				char by = (char) buffer[0];
+				if (by == '\r' && !r1) {
 					r1 = true;
-				} else if (buffer[0] == 13 && r1 && n1 && !r2) {
+				} else if (by == 'r' && r1 && n1 && !r2) {
 					// we see a \r immediately after \r\n, may be the end
 					r2 = true;
-				} else if (buffer[0] == 10 && r1 && !n1) {
+				} else if (by == 'n' && r1 && !n1) {
 					// we see a \n immediately after \r, may be the end
 					n1 = true;
-				} else if (buffer[0] == 13 && r1 && n1 && r2 && !n2) {
+				} else if (by == 'n' && r1 && n1 && r2 && !n2) {
 					// we see a \n immediately after \r\n\r, must be the end
 					n2 = true;
 					header_over = true; //now we have all the header!
-				} else if (r1 && buffer[0] != 10) {
+				} else if (r1 && by != 'n') {
 					// after a \r is not a \n, not the end
 					r1 = false;
-				} else if (r1 && n1 && buffer[0] != 13) {
+				} else if (r1 && n1 && by != 'r') {
 					// after a \r\n is not a \r, not the end
 					r1 = false;
 					n1 = false;
-				} else if (r1 && n1 && r2 && buffer[0] != 10) {
+				} else if (r1 && n1 && r2 && by != 'n') {
 					// after a \r\n\r is not a \n, not the end
 					r1 = false;
 					n1 = false;
