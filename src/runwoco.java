@@ -34,7 +34,7 @@ public class runwoco {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 42237;
+		int port_num = 42239;
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
@@ -88,7 +88,10 @@ public class runwoco {
 			StringBuilder clientData = new StringBuilder();
 			// read until header_over turn into true, send header ASAP
 			// Then, we can read and send payload
+			
+			// TOTALLY FAILED TO READ OR FAILED TO EXIT THE LOOP
 			while (!header_over && clientSocket.getInputStream().read(buffer) > -1) {
+				// System.out.println("enter");
 				// we see a \r maybe the end
 				if (buffer[0] == 13 && !r1) {
 					r1 = true;
@@ -122,7 +125,7 @@ public class runwoco {
 			}
 			String clientString = clientData.toString();
 			System.out.println(clientString);
-
+			System.out.println("Apple");
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
 			String clientString_h = clientString.toLowerCase();
@@ -155,7 +158,9 @@ public class runwoco {
 
 			// find the version of http
 			// get the line with the command GET
+			
 			int change_version = clientString_h.indexOf("get");
+			change_version = 0;
 			int end_version = get_end_line_index(clientString_h, change_version);
 			String request_line = clientString_h.substring(change_version, end_version);
 			request_line = request_line.trim();
