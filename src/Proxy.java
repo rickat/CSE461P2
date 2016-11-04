@@ -127,22 +127,22 @@ public class Proxy {
 			// find the host of the destination
 			int start_host = clientString_h.indexOf("host");
 			int end_host = get_end_line_index(clientString_h, start_host);
-			String host_name = clientString_h.substring(start_host, end_host);
+			String host_name = clientString_h.substring(start_host, end_host); //ex: host:xxxxxxxxxxx
 			// get host name			
 			// get rid of "Host:"
 			int start_name = host_name.indexOf(":");
-			String name = host_name.substring(start_name + 1);
+			String name = host_name.substring(start_name + 1); // include white space
 			// trim out white space
 			name = name.trim();
-			// see if port exists
-			int port_start = name.indexOf(":");
 			// default port num is 80
 			int port_num = 80;
-			String port = "";
-			// the user specified port num
+			// see if port exists
+		    int port_start = name.indexOf(":");
+		    // if we didn't find ":", then using default port num
+		    // otherwise, using specified port num and update name
 			if (port_start != -1) {
 				// get the client specified port number instead of using default
-				port = name.substring(port_start + 1).trim();
+				String port = name.substring(port_start + 1).trim();
 				port_num = Integer.parseInt(port);
 				name = name.substring(0, port_start).trim();
 			}
