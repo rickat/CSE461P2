@@ -86,6 +86,21 @@ public class test {
 		byte c = 65;
 		System.out.println(b);
 		System.out.println((char)c);
+		
+		String ts2 = "GET  https://www.my.example.page.com/:44774  HTTP/1.1 \r\n";
+		ts2 = ts2.toLowerCase();
+		int n = ts2.indexOf("get");
+		int m = ts2.indexOf("http/1.");
+		String s = ts2.substring(n, m);
+		s.trim();
+		System.out.println(s);
+		int a = s.indexOf("://");
+		int portn = port_num;
+		if (a != -1) {
+			int ci = s.indexOf(":", a + 2);
+			portn = Integer.parseInt(s.substring(ci + 1).trim());
+		}
+		System.out.println(portn);
 	}
 	
 	public static int get_end_line_index(String s, int start) {
