@@ -15,8 +15,8 @@ public class test_new {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String test_string = "GET  https://www.my.example.page.com/  :  43332 HTTP/1.1 \r\n";
-		test_string += "Host:  www.my.example.page.com :  43332\n";
+		String test_string = "GET  https://www.my.example.page.com/ HTTP/1.1 \r\n";
+		test_string += "Host:  www.my.example.page.com   \n";
 		test_string += "User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0\r\n";
 		test_string += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n";
 		test_string += "Accept-Language: en-US,en;q=0.5\r\n";
