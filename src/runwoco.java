@@ -8,8 +8,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-public class runwoco {
+public class Proxy {
 
 	/**
 	 * 
@@ -73,19 +76,6 @@ public class runwoco {
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
 		public ByteBuffer client_to_proxy_to_server() throws IOException {
-			byte[] buffer = new byte[1]; // read header one by one until reaching /r/n/r/n
-			boolean header_over = false; // header_over = r1&n1&r2&n2
-			boolean r1 = false; //check the first "\r" in "\r\n\r\n"
-			boolean n1 = false; //check the first "\n" in "\r\n\r\n"
-			boolean r2 = false; //check the second "\r" in "\r\n\r\n"
-			boolean n2 = false; //check the second "\n" in "\r\n\r\n"
-			// StringBuilder to build header
-			// reasons why using StringBuilder: thread safe
-			// StringBuilder clientData = new StringBuilder();
-			// read until header_over turn into true, send header ASAP
-			// Then, we can read and send payload
-			
-			// TOTALLY FAILED TO READ OR FAILED TO EXIT THE LOOP
 			StringBuffer sb = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
@@ -96,50 +86,12 @@ public class runwoco {
 					String s = sb.toString();
 					System.out.println(s);
 					clientData.append(s);
-					if (s.equals(new String(new char[] {'\r','\n'}))) {
+					if (s.equals("\r\n")) {
 						break;
 					} else {
 						sb = new StringBuffer();
 					}
 				}
-				// we see a \r maybe the end
-				// char by = (char) buffer[0];
-//				if (by == '\r' && !r1) {
-//					System.out.println("found a r1");
-//					r1 = true;
-//				} else if (by == '\r' && r1 && n1 && !r2) {
-//					// we see a \r immediately after \r\n, may be the end
-//					System.out.println("found a r2");
-//					r2 = true;
-//				} else if (by == '\n' && r1 && !n1) {
-//					// we see a \n immediately after \r, may be the end
-//					System.out.println("found a n1");
-//					n1 = true;
-//				} else if (by == '\n' && r1 && n1 && r2 && !n2) {
-//					// we see a \n immediately after \r\n\r, must be the end
-//					System.out.println("found a n2");
-//					n2 = true;
-//					header_over = true; //now we have all the header!
-//					System.out.println("found rnrn");
-//				} else if (r1 && by != '\n') {
-//					// after a \r is not a \n, not the end
-//					r1 = false;
-//				} else if (r1 && n1 && by != '\r') {
-//					// after a \r\n is not a \r, not the end
-//					r1 = false;
-//					n1 = false;
-//				} else if (r1 && n1 && r2 && by != '\n') {
-//					// after a \r\n\r is not a \n, not the end
-//					r1 = false;
-//					n1 = false;
-//					r2 = false;
-//				}
-				// convert cur byte -> cur string
-				// append cur string -> string builder
-//				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
-//				clientData.append(b);
-//				System.out.println(curString);
-//				System.out.println(clientData.toString());
 			}
 			String clientString = clientData.toString();
 			System.out.println(clientString.toString());
@@ -207,6 +159,9 @@ public class runwoco {
 					port_num = Integer.parseInt(port);
 				}
 			}
+			// get time
+			DateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm:ss");
+			Calendar cal = Calendar.getInstance();
 
 			// if start with http
 			// check if it's https. if it's https, default port_num is 443 unless
@@ -217,9 +172,9 @@ public class runwoco {
 			}
 			//print request line
 			InetAddress address = InetAddress.getByName(name); 
-			System.out.println("Proxy listening on " + address.getHostAddress() + ":" + port_num);
-			String request_line_2 = clientString.substring(change_version, end_version);
-			System.out.println(request_line_2.trim());
+			System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
+			String request_line_2 = clientString.substring(change_version, end_version - 8);
+			System.out.println(dateFormat.format(cal.getTime()) + " - >>>" + request_line_2.trim());
 			// change http version number
 			int version_num = clientString_h.indexOf("http/1.1");
 			assert(version_num != -1);
