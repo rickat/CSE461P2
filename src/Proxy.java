@@ -223,24 +223,25 @@ public class Proxy {
 			}
 			
 			String return_message;
-			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-			if(proxy_to_server.isConnected()) {
-				System.out.println("connect");
-				return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
-
-			} else {
-				return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+			if(request_line.indexOf("connect") == 0) {
+				// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
+				if(proxy_to_server.isConnected()) {
+					System.out.println("connect");
+					return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
+	
+				} else {
+					return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+				}
+				System.out.println("out");
+				OutputStream out_to_client = clientSocket.getOutputStream(); 
+				DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
+				ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
+				for(int i = 0;i<return_message.length();i++){
+					char temp = return_message.charAt(i);
+					send_data_client.put((byte) temp);
+				}
+				dos_to_client.write(send_data_client.array(), 0, return_message.length());
 			}
-			System.out.println("out");
-			OutputStream out_to_client = clientSocket.getOutputStream(); 
-			DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
-			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
-			for(int i = 0;i<return_message.length();i++){
-				char temp = return_message.charAt(i);
-				send_data_client.put((byte) temp);
-			}
-			dos_to_client.write(send_data_client.array(), 0, return_message.length());
-			
 			// starts to get message from the server
 			while ((readlen = proxy_to_server.getInputStream().read(buffer)) > -1) {
 				// dos_to_client.write(buffer, 0, readlen);
