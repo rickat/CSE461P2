@@ -283,11 +283,10 @@ public class runwoco {
 				scc.write(bb2);
 				System.out.println(new String(bb2.array()));
 			}
-			String requst_type = request_line.substring(0, request_line.indexOf(" "));
 			String return_message;
 			// If the request is connect
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-			if(request_line.indexOf("connect") != -1) {
+			if(request_line.indexOf("connect") == 0) {
 				if(scc.isConnected()) {
 					System.out.println("connect");
 					return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
@@ -295,17 +294,19 @@ public class runwoco {
 				} else {
 					return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 				}
+
+				System.out.println("out");
+				// OutputStream out_to_client = clientSocket.getOutputStream(); 
+				// DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
+				ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
+				for(int i = 0;i<return_message.length();i++){
+					char temp = return_message.charAt(i);
+					send_data_client.put((byte) temp);
+				}
+
+				// dos_to_client.write(send_data_client.array(), 0, return_message.length());
+				clientSocket.write(send_data_client);
 			}
-			System.out.println("out");
-			// OutputStream out_to_client = clientSocket.getOutputStream(); 
-			// DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
-			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
-			for(int i = 0;i<return_message.length();i++){
-				char temp = return_message.charAt(i);
-				send_data_client.put((byte) temp);
-			}
-			// dos_to_client.write(send_data_client.array(), 0, return_message.length());
-			clientSocket.write(send_data_client);
 			// starts to get message from the server
 			while (scc.read(buffer) > -1) {
 				// dos_to_client.write(buffer, 0, readlen);
