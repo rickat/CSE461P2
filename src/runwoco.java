@@ -283,7 +283,7 @@ public class runwoco {
 				scc.write(bb2);
 				System.out.println(new String(bb2.array()));
 			}
-			String requst_type = request_line.substring(0, line.indexOf(" "));
+			String requst_type = request_line.substring(0, request_line.indexOf(" "));
 			String return_message;
 			// If the request is connect
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
