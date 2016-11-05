@@ -47,7 +47,7 @@ public class runwoco {
 		InetSocketAddress port_num = new InetSocketAddress(22333);
 		ServerSocketChannel scs = ServerSocketChannel.open();
 		Selector selector = Selector.open();
-		
+
 		try {
 			System.out.println("yyyy");
 			scs.socket().bind(port_num);
@@ -77,7 +77,7 @@ public class runwoco {
 		public Selector sel;
 
 		public Client_handler(SocketChannel socket, ServerSocketChannel serverSocket, Selector sel) {
-			
+
 			this.sel = sel;
 			clientSocket = socket;
 			try {
@@ -162,7 +162,7 @@ public class runwoco {
 
 			// find the version of http
 			// get the line with the command GET
-			
+
 			// int change_version = clientString_h.indexOf("get");
 			int change_version = 0;
 			int end_version = get_end_line_index(clientString_h, change_version);
@@ -241,7 +241,7 @@ public class runwoco {
 				char cur_char = clientString.charAt(i);
 				sendData.put((byte) cur_char);
 			}
-			
+
 			// UNSOLVED PART STARTS FROM HERE!!!!!!
 			//send the data
 			// @SuppressWarnings("resource")
@@ -258,7 +258,7 @@ public class runwoco {
 						break;
 					}
 				}
-				
+
 			}
 			assert(scc == null);
 			assert(scc != null);
@@ -273,7 +273,7 @@ public class runwoco {
 			// OutputStream out = proxy_to_server.getOutputStream(); 
 			// DataOutputStream dos = new DataOutputStream(out);
 			// dos.write(sendData.array(), 0, clientString.length());
-			
+
 			// read any remaining data and directly send to the server
 			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
 			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
@@ -285,13 +285,16 @@ public class runwoco {
 			}
 			String requst_type = request_line.substring(0, line.indexOf(" "));
 			String return_message;
+			// If the request is connect
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-			if(scc.isConnected()) {
-				System.out.println("connect");
-				return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
+			if(request_line.indexOf("connect") != -1) {
+				if(scc.isConnected()) {
+					System.out.println("connect");
+					return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
 
-			} else {
-				return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+				} else {
+					return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
+				}
 			}
 			System.out.println("out");
 			// OutputStream out_to_client = clientSocket.getOutputStream(); 
