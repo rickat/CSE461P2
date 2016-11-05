@@ -9,6 +9,9 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.channels.spi.SelectorProvider;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -36,6 +39,8 @@ public class runwoco {
 		// int port_num = Integer.parseInt(args[0]);
 		int port_num = 22222;
 		ServerSocket serverSocket = null;
+		ServerSocketChannel scs;
+		SocketChannel scc;
 		try {
 			serverSocket = new ServerSocket(port_num);
 		} catch (IOException e) {
@@ -57,8 +62,12 @@ public class runwoco {
 
 		public ServerSocket serverSocket;
 		public Socket clientSocket;
+		public SocketChannel scs;
+		public SocketChannel scc;
 
 		public Client_handler(Socket socket, ServerSocket serverSocket) {
+			
+			
 			clientSocket = socket;
 			serverSocket = serverSocket;
 		}
