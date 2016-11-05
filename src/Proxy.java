@@ -34,7 +34,7 @@ public class Proxy {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 22333;
+		int port_num = 22333; // should be delete after finish run script
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
@@ -81,26 +81,28 @@ public class Proxy {
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
 		public ByteBuffer client_to_proxy_to_server() throws IOException {
-			StringBuffer sb = new StringBuffer();
+			StringBuffer line_buffer = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
-				// System.out.println("enter");
-				byte b = (byte)clientSocket.getInputStream().read();
-				sb.append((char)b);
-				if (b == '\n') {
-					String s = sb.toString();
-					System.out.println(s);
-					clientData.append(s);
-					if (s.equals("\r\n")) {
+				// read a byte from client
+				byte cur_byte = (byte)clientSocket.getInputStream().read();
+				line_buffer.append((char)cur_byte);
+				if (cur_byte == '\n') {
+					String cur_line = line_buffer.toString();
+					System.out.println(cur_line);
+					clientData.append(cur_line);
+					if (cur_line.equals("\r\n")) { //read the end of header, break
 						break;
 					} else {
-						sb = new StringBuffer();
+						// flush buffer to get next line
+						line_buffer = new StringBuffer();
 					}
 				}
 			}
 			String clientString = clientData.toString();
-			System.out.println(clientString.toString());
-			System.out.println("Apple");
+			System.out.println(clientString);
+			System.out.println("Apple"); // at here, all head info should have been collected
+			
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
 			String clientString_h = clientString.toLowerCase();
@@ -124,46 +126,41 @@ public class Proxy {
 				// get the client specified port number instead of using default
 				String port = name.substring(port_start + 1).trim();
 				port_num = Integer.parseInt(port);
-				name = name.substring(0, port_start).trim();
+				name = name.substring(0, port_start).trim(); // update host name
 			}
 			System.out.println(name);
-			name = name.trim();
 			// end get host name
 
 			// find the version of http
 			// get the line with the command GET
-			
-			// int change_version = clientString_h.indexOf("get");
 			int change_version = 0;
 			int end_version = get_end_line_index(clientString_h, change_version);
 			String request_line = clientString_h.substring(change_version, end_version);
-			request_line = request_line.trim();
-
-
-
-
-			int https = request_line.indexOf("https");
-			int http = request_line.indexOf("http");
-			int http_version = request_line.indexOf("http/1.1");
-			port_start = request_line.lastIndexOf(":");
-			if(port_start != -1) {
-				// if start with https
+			request_line = request_line.trim(); // get the request line
+            int https = request_line.indexOf("https"); // get the position of "https" if any
+			int http = request_line.indexOf("http"); // get position of "http" if any
+			int http_version = request_line.indexOf("http/1.1"); // get position of http version for finding potential port num
+			port_start = request_line.lastIndexOf(":"); // find the last appearance of ":"
+			if(port_start != -1) { // if ":" apears in request line
+				// check with https first
 				if (https != -1) {
 					// the ":" is not the one after https
 					if (port_start != https + 5) {
 						String port = name.substring(port_start + 1, http_version).trim();
-						port_num = Integer.parseInt(port);
+						port_num = Integer.parseInt(port); // update port
 					}
-				} else if(http != -1) {
-					if (port_start != http + 4) {
+				} else if(http != -1) { // check with http
+					if (port_start != http + 4) { // ":" is not the one after "http"
 						String port = name.substring(port_start + 1, http_version).trim();
-						port_num = Integer.parseInt(port);
+						port_num = Integer.parseInt(port); // update port
 					}
-				} else { //ip address instead of host name
+				} else { // no appearance of "http" or "https"; IP address instead of host name
 					String port = name.substring(port_start + 1, http_version).trim();
-					port_num = Integer.parseInt(port);
+					port_num = Integer.parseInt(port); // update port
 				}
 			}
+			// we have updated all possible port num above
+			
 			// get time
 			DateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm:ss");
 			Calendar cal = Calendar.getInstance();
