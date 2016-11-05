@@ -34,7 +34,7 @@ public class Proxy {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 22222;
+		int port_num = 22333;
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
