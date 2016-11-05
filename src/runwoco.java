@@ -11,6 +11,7 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -77,8 +78,20 @@ public class runwoco {
 
 		public Client_handler(SocketChannel socket, ServerSocketChannel serverSocket, Selector sel) {
 			
-			sel = sel;
+			this.sel = sel;
 			clientSocket = socket;
+			try {
+				clientSocket.configureBlocking(false);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				clientSocket.register(sel, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+			} catch (ClosedChannelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			// serverSocket = serverSocket;
 			scs = serverSocket;
 		}
@@ -195,7 +208,7 @@ public class runwoco {
 			//print request line
 			InetAddress address = InetAddress.getByName(name); 
 			System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
-			String request_line_2 = clientString.substring(change_version, end_version - 8);
+			String request_line_2 = request_line.substring(change_version, end_version - 8);
 			System.out.println(dateFormat.format(cal.getTime()) + " - >>>" + request_line_2.trim());
 			// change http version number
 			int version_num = clientString_h.indexOf("http/1.1");
@@ -247,8 +260,15 @@ public class runwoco {
 				}
 				
 			}
+			assert(scc == null);
+			assert(scc != null);
 			System.out.println(scc.isConnected());
-			scc.register(sel, SelectionKey.OP_WRITE);
+			assert(scc == null);
+			assert(scc != null);
+			System.out.println(scc == null);
+			System.out.println(sel == null);
+			assert(sel != null);
+			scc.register(sel, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
 			// scc.register(sel, SelectionKey.OP_READ);
 			// OutputStream out = proxy_to_server.getOutputStream(); 
 			// DataOutputStream dos = new DataOutputStream(out);
@@ -257,10 +277,11 @@ public class runwoco {
 			// read any remaining data and directly send to the server
 			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
 			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
-			// int readlen;
-			while (clientSocket.read(bb2) > -1) {
-				System.out.println("aaaa");
+			int readlen;
+			while ((readlen = clientSocket.read(bb2)) > -1) {
+				System.out.println("aaaa" + readlen);
 				scc.write(bb2);
+				System.out.println(new String(bb2.array()));
 			}
 			
 			String return_message;

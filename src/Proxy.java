@@ -178,7 +178,7 @@ public class Proxy {
 			//print request line
 			InetAddress address = InetAddress.getByName(name); 
 			System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
-			String request_line_2 = clientString.substring(change_version, end_version - 8);
+			String request_line_2 = request_line.substring(change_version, end_version - 8);
 			System.out.println(dateFormat.format(cal.getTime()) + " - >>>" + request_line_2.trim());
 			// change http version number
 			int version_num = clientString_h.indexOf("http/1.1");
