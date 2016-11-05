@@ -4,17 +4,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
 
 public class runwoco {
 
@@ -31,45 +36,51 @@ public class runwoco {
 	 * @param args
 	 * @throws IOException 
 	 */
+	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 		if (args.length > 1) {
 			System.err.println("too many args");
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 22222;
-		ServerSocket serverSocket = null;
-		ServerSocketChannel scs;
-		SocketChannel scc;
+		InetSocketAddress port_num = new InetSocketAddress(22333);
+		ServerSocketChannel scs = ServerSocketChannel.open();
+		Selector selector = Selector.open();
+		
 		try {
-			serverSocket = new ServerSocket(port_num);
+			System.out.println("yyyy");
+			scs.socket().bind(port_num);
+			System.out.println("xxxx");
+			scs.configureBlocking(false);
+			scs.register(selector, SelectionKey.OP_ACCEPT); 
 		} catch (IOException e) {
 			System.out.println("Could not listen on port " + port_num);
 			System.exit(-1);
 		}
 		while(true){
-			Socket client = null;
-			try {
-				client = serverSocket.accept();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			SocketChannel client = scs.accept();
+			// System.out.println("aaa");
+			if (client != null) {
+				System.out.println(client.isConnected());
+				new Thread(new Client_handler(client, scs, selector)).start();
 			}
-			new Thread(new Client_handler(client, serverSocket)).start(); 
+			// System.out.println("bbb");
 		}
 	}
 
 	static class Client_handler implements Runnable {
 
-		public ServerSocket serverSocket;
-		public Socket clientSocket;
-		public SocketChannel scs;
-		public SocketChannel scc;
+		// public ServerSocket serverSocket;
+		public SocketChannel clientSocket;
+		public ServerSocketChannel scs;
+		public Selector sel;
 
-		public Client_handler(Socket socket, ServerSocket serverSocket) {
+		public Client_handler(SocketChannel socket, ServerSocketChannel serverSocket, Selector sel) {
 			
-			
+			sel = sel;
 			clientSocket = socket;
-			serverSocket = serverSocket;
+			// serverSocket = serverSocket;
+			scs = serverSocket;
 		}
 
 		@Override
@@ -89,8 +100,9 @@ public class runwoco {
 			StringBuffer sb = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
-				// System.out.println("enter");
-				byte b = (byte)clientSocket.getInputStream().read();
+				ByteBuffer bb = ByteBuffer.allocate(1);
+				clientSocket.read(bb);
+				byte b = bb.get(0);
 				sb.append((char)b);
 				if (b == '\n') {
 					String s = sb.toString();
@@ -216,23 +228,44 @@ public class runwoco {
 				char cur_char = clientString.charAt(i);
 				sendData.put((byte) cur_char);
 			}
+			
+			// UNSOLVED PART STARTS FROM HERE!!!!!!
 			//send the data
-			@SuppressWarnings("resource")
-			Socket proxy_to_server = new Socket(name, port_num);
-			OutputStream out = proxy_to_server.getOutputStream(); 
-			DataOutputStream dos = new DataOutputStream(out);
-			dos.write(sendData.array(), 0, clientString.length());
+			// @SuppressWarnings("resource")
+			SocketChannel scc = SocketChannel.open();
+			// Socket proxy_to_server = new Socket(name, port_num);
+			scc.configureBlocking(false);
+			scc.connect(new InetSocketAddress(name, port_num));
+			System.out.println(scc.isConnected());
+			while(!scc.isConnected()){
+				if (!scc.isConnectionPending()) {
+					scc.connect(new InetSocketAddress(name, port_num));
+				} else {
+					if (scc.finishConnect()) {
+						break;
+					}
+				}
+				
+			}
+			System.out.println(scc.isConnected());
+			scc.register(sel, SelectionKey.OP_WRITE);
+			// scc.register(sel, SelectionKey.OP_READ);
+			// OutputStream out = proxy_to_server.getOutputStream(); 
+			// DataOutputStream dos = new DataOutputStream(out);
+			// dos.write(sendData.array(), 0, clientString.length());
 			
 			// read any remaining data and directly send to the server
-			byte[] buffer = new byte[1024 * 5];
-			int readlen;
-			while ((readlen = clientSocket.getInputStream().read(buffer)) > -1) {
-				dos.write(buffer, 0, readlen);
+			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
+			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
+			// int readlen;
+			while (clientSocket.read(bb2) > -1) {
+				System.out.println("aaaa");
+				scc.write(bb2);
 			}
 			
 			String return_message;
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-			if(proxy_to_server.isConnected()) {
+			if(scc.isConnected()) {
 				System.out.println("connect");
 				return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
 
@@ -240,20 +273,21 @@ public class runwoco {
 				return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 			}
 			System.out.println("out");
-			OutputStream out_to_client = clientSocket.getOutputStream(); 
-			DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
+			// OutputStream out_to_client = clientSocket.getOutputStream(); 
+			// DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
 			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
 			for(int i = 0;i<return_message.length();i++){
 				char temp = return_message.charAt(i);
 				send_data_client.put((byte) temp);
 			}
-			dos_to_client.write(send_data_client.array(), 0, return_message.length());
-			
+			// dos_to_client.write(send_data_client.array(), 0, return_message.length());
+			clientSocket.write(send_data_client);
 			// starts to get message from the server
-			while ((readlen = proxy_to_server.getInputStream().read(buffer)) > -1) {
+			while (scc.read(buffer) > -1) {
 				// dos_to_client.write(buffer, 0, readlen);
-				String s = new String(buffer);
+				String s = new String(buffer.array());
 				System.out.println(s);
+				clientSocket.write(buffer);
 			}
 			return null;
 		}

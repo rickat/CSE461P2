@@ -38,6 +38,7 @@ public class Proxy {
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
+			
 		} catch (IOException e) {
 			System.out.println("Could not listen on port " + port_num);
 			System.exit(-1);
@@ -46,6 +47,9 @@ public class Proxy {
 			Socket client = null;
 			try {
 				client = serverSocket.accept();
+				InetAddress a = serverSocket.getInetAddress();
+				System.out.println(a);
+				
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
