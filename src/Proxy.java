@@ -34,7 +34,7 @@ public class Proxy {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 22333;
+		int port_num = 22333; // should be delete after finish run script
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
@@ -81,20 +81,21 @@ public class Proxy {
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
 		public ByteBuffer client_to_proxy_to_server() throws IOException {
-			StringBuffer sb = new StringBuffer();
+			StringBuffer line_buffer = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
-				// System.out.println("enter");
-				byte b = (byte)clientSocket.getInputStream().read();
-				sb.append((char)b);
-				if (b == '\n') {
-					String s = sb.toString();
-					System.out.println(s);
-					clientData.append(s);
-					if (s.equals("\r\n")) {
+				// read a byte from client
+				byte cur_byte = (byte)clientSocket.getInputStream().read();
+				line_buffer.append((char)cur_byte);
+				if (cur_byte == '\n') {
+					String cur_line = line_buffer.toString();
+					System.out.println(cur_line);
+					clientData.append(cur_line);
+					if (cur_line.equals("\r\n")) { //read the end of header, break
 						break;
 					} else {
-						sb = new StringBuffer();
+						// flush buffer to get next line
+						line_buffer = new StringBuffer();
 					}
 				}
 			}
