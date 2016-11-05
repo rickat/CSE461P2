@@ -1,17 +1,13 @@
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.util.Random;
 
 public class runwoco {
 
@@ -276,6 +272,10 @@ public class runwoco {
 				send_data_client.put((byte) temp);
 			}
 			dos_to_client.write(send_data_client.array(), 0, return_message.length());
+			
+			// starts to get message from the server
+			
+			
 			return null;
 		}
 

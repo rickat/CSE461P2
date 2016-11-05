@@ -1,17 +1,13 @@
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.util.Random;
 
 public class Proxy {
 
@@ -33,13 +29,13 @@ public class Proxy {
 			System.err.println("too many args");
 			return;
 		}
-		//int port_num = Integer.parseInt(args[0]);
+		// int port_num = Integer.parseInt(args[0]);
+		int port_num = 22222;
 		ServerSocket serverSocket = null;
 		try {
-			//serverSocket = new ServerSocket(port_num);
-			serverSocket = new ServerSocket(42373);
+			serverSocket = new ServerSocket(port_num);
 		} catch (IOException e) {
-			System.out.println("Could not listen on port " + 42373);
+			System.out.println("Could not listen on port " + port_num);
 			System.exit(-1);
 		}
 		while(true){
@@ -66,7 +62,6 @@ public class Proxy {
 		@Override
 		public void run() {
 			ByteBuffer sb;
-			System.out.println("here");
 			try {
 				sb = client_to_proxy_to_server();
 			} catch (IOException e) {
@@ -86,45 +81,69 @@ public class Proxy {
 			boolean n2 = false; //check the second "\n" in "\r\n\r\n"
 			// StringBuilder to build header
 			// reasons why using StringBuilder: thread safe
-			StringBuilder clientData = new StringBuilder();
+			// StringBuilder clientData = new StringBuilder();
 			// read until header_over turn into true, send header ASAP
 			// Then, we can read and send payload
-			while (!header_over) {
-				// we see a \r maybe the end
-				clientSocket.getInputStream().read(buffer);
-				char by = (char) buffer[0];
-				if (by == '\r' && !r1) {
-					r1 = true;
-				} else if (by == 'r' && r1 && n1 && !r2) {
-					// we see a \r immediately after \r\n, may be the end
-					r2 = true;
-				} else if (by == 'n' && r1 && !n1) {
-					// we see a \n immediately after \r, may be the end
-					n1 = true;
-				} else if (by == 'n' && r1 && n1 && r2 && !n2) {
-					// we see a \n immediately after \r\n\r, must be the end
-					n2 = true;
-					header_over = true; //now we have all the header!
-				} else if (r1 && by != 'n') {
-					// after a \r is not a \n, not the end
-					r1 = false;
-				} else if (r1 && n1 && by != 'r') {
-					// after a \r\n is not a \r, not the end
-					r1 = false;
-					n1 = false;
-				} else if (r1 && n1 && r2 && by != 'n') {
-					// after a \r\n\r is not a \n, not the end
-					r1 = false;
-					n1 = false;
-					r2 = false;
+			
+			// TOTALLY FAILED TO READ OR FAILED TO EXIT THE LOOP
+			StringBuffer sb = new StringBuffer();
+			StringBuffer clientData = new StringBuffer();
+			while (true) {
+				// System.out.println("enter");
+				byte b = (byte)clientSocket.getInputStream().read();
+				sb.append((char)b);
+				if (b == '\n') {
+					String s = sb.toString();
+					System.out.println(s);
+					clientData.append(s);
+					if (s.equals(new String(new char[] {'\r','\n'}))) {
+						break;
+					} else {
+						sb = new StringBuffer();
+					}
 				}
+				// we see a \r maybe the end
+				// char by = (char) buffer[0];
+//				if (by == '\r' && !r1) {
+//					System.out.println("found a r1");
+//					r1 = true;
+//				} else if (by == '\r' && r1 && n1 && !r2) {
+//					// we see a \r immediately after \r\n, may be the end
+//					System.out.println("found a r2");
+//					r2 = true;
+//				} else if (by == '\n' && r1 && !n1) {
+//					// we see a \n immediately after \r, may be the end
+//					System.out.println("found a n1");
+//					n1 = true;
+//				} else if (by == '\n' && r1 && n1 && r2 && !n2) {
+//					// we see a \n immediately after \r\n\r, must be the end
+//					System.out.println("found a n2");
+//					n2 = true;
+//					header_over = true; //now we have all the header!
+//					System.out.println("found rnrn");
+//				} else if (r1 && by != '\n') {
+//					// after a \r is not a \n, not the end
+//					r1 = false;
+//				} else if (r1 && n1 && by != '\r') {
+//					// after a \r\n is not a \r, not the end
+//					r1 = false;
+//					n1 = false;
+//				} else if (r1 && n1 && r2 && by != '\n') {
+//					// after a \r\n\r is not a \n, not the end
+//					r1 = false;
+//					n1 = false;
+//					r2 = false;
+//				}
 				// convert cur byte -> cur string
 				// append cur string -> string builder
-				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
-				clientData.append(curString);
+//				String curString = new String(buffer, "US-ASCII"); // assumption that client sends ASCII encoded
+//				clientData.append(b);
+//				System.out.println(curString);
+//				System.out.println(clientData.toString());
 			}
 			String clientString = clientData.toString();
-
+			System.out.println(clientString.toString());
+			System.out.println("Apple");
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
 			String clientString_h = clientString.toLowerCase();
@@ -150,14 +169,15 @@ public class Proxy {
 				port_num = Integer.parseInt(port);
 				name = name.substring(0, port_start).trim();
 			}
-			// strip out host
-			name = name.substring(5);
+			System.out.println(name);
 			name = name.trim();
 			// end get host name
 
 			// find the version of http
 			// get the line with the command GET
+			
 			int change_version = clientString_h.indexOf("get");
+			change_version = 0;
 			int end_version = get_end_line_index(clientString_h, change_version);
 			String request_line = clientString_h.substring(change_version, end_version);
 			request_line = request_line.trim();
@@ -178,7 +198,7 @@ public class Proxy {
 						port_num = Integer.parseInt(port);
 					}
 				} else if(http != -1) {
-					if (port_start != https + 4) {
+					if (port_start != http + 4) {
 						String port = name.substring(port_start + 1, http_version).trim();
 						port_num = Integer.parseInt(port);
 					}
@@ -210,7 +230,10 @@ public class Proxy {
 			int status_start = clientString_h.indexOf("keep-alive");
 			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
 			// end change keep alive
-
+			System.out.println("\n" + clientString);
+			System.out.println(name);
+			System.out.println(host_name);
+			System.out.println(port_num);
 			// end finding info about server and changing info
 			// NOTE: Host Name: name
 			//	 	 Port     : port_num
@@ -226,7 +249,7 @@ public class Proxy {
 			ByteBuffer sendData = ByteBuffer.allocate(clientString.length());
 			for(int i = 0; i < clientString.length();i++){
 				char cur_char = clientString.charAt(i);
-				sendData.putChar(cur_char);
+				sendData.put((byte) cur_char);
 			}
 			//send the data
 			Socket proxy_to_server = new Socket(name, port_num);
@@ -246,9 +269,13 @@ public class Proxy {
 			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
 			for(int i = 0;i<return_message.length();i++){
 				char temp = return_message.charAt(i);
-				send_data_client.putChar(temp);
+				send_data_client.put((byte) temp);
 			}
 			dos_to_client.write(send_data_client.array(), 0, return_message.length());
+			
+			// starts to get message from the server
+			
+			
 			return null;
 		}
 
@@ -282,6 +309,7 @@ public class Proxy {
 		}
 	}
 }
+
 
 
 
