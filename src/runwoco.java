@@ -1,3 +1,4 @@
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +13,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-public class Proxy {
+public class runwoco {
 
 	/**
 	 * 
@@ -128,8 +129,8 @@ public class Proxy {
 			// find the version of http
 			// get the line with the command GET
 			
-			int change_version = clientString_h.indexOf("get");
-			change_version = 0;
+			// int change_version = clientString_h.indexOf("get");
+			int change_version = 0;
 			int end_version = get_end_line_index(clientString_h, change_version);
 			String request_line = clientString_h.substring(change_version, end_version);
 			request_line = request_line.trim();
@@ -207,18 +208,29 @@ public class Proxy {
 				sendData.put((byte) cur_char);
 			}
 			//send the data
+			@SuppressWarnings("resource")
 			Socket proxy_to_server = new Socket(name, port_num);
 			OutputStream out = proxy_to_server.getOutputStream(); 
 			DataOutputStream dos = new DataOutputStream(out);
 			dos.write(sendData.array(), 0, clientString.length());
+			
+			// read any remaining data and directly send to the server
+			byte[] buffer = new byte[1024 * 5];
+			int readlen;
+			while ((readlen = clientSocket.getInputStream().read(buffer)) > -1) {
+				dos.write(buffer, 0, readlen);
+			}
+			
 			String return_message;
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
 			if(proxy_to_server.isConnected()) {
+				System.out.println("connect");
 				return_message = new String("HTTP/1.0 200 OK\r\n\r\n");
 
 			} else {
 				return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 			}
+			System.out.println("out");
 			OutputStream out_to_client = clientSocket.getOutputStream(); 
 			DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
 			ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
@@ -229,8 +241,11 @@ public class Proxy {
 			dos_to_client.write(send_data_client.array(), 0, return_message.length());
 			
 			// starts to get message from the server
-			
-			
+			while ((readlen = proxy_to_server.getInputStream().read(buffer)) > -1) {
+				// dos_to_client.write(buffer, 0, readlen);
+				String s = new String(buffer);
+				System.out.println(s);
+			}
 			return null;
 		}
 
