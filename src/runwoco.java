@@ -132,7 +132,7 @@ public class runwoco {
 				}
 			}
 			String clientString = clientData.toString();
-			System.out.println(clientString.toString());
+			System.out.println(clientString);
 			System.out.println("Apple");
 			// find the destination (Can be put into a separate method)
 			// a lower case version of the client data, so that it will be case insensitive
@@ -223,11 +223,12 @@ public class runwoco {
 			int status_start = clientString_h.indexOf("keep-alive");
 			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
 			// end change keep alive
+			
 			System.out.println("\n" + clientString);
 			System.out.println(name);
 			System.out.println(host_name);
 			System.out.println(port_num);
-			// end finding info about server and changing info
+
 			// NOTE: Host Name: name
 			//	 	 Port     : port_num
 			// 		 Header   : clientString
