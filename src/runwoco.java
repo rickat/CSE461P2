@@ -90,7 +90,7 @@ public class runwoco {
 				e1.printStackTrace();
 			}
 			try {
-				clientSocket.register(sel, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+				clientSocket.register(sel, SelectionKey.OP_READ /*| SelectionKey.OP_WRITE*/);
 			} catch (ClosedChannelException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -271,7 +271,7 @@ public class runwoco {
 			System.out.println(scc == null);
 			System.out.println(sel == null);
 			assert(sel != null);
-			scc.register(sel, SelectionKey.OP_WRITE | SelectionKey.OP_READ);
+			scc.register(sel, /*SelectionKey.OP_WRITE | */SelectionKey.OP_READ);
 			// scc.register(sel, SelectionKey.OP_READ);
 			// OutputStream out = proxy_to_server.getOutputStream(); 
 			// DataOutputStream dos = new DataOutputStream(out);
@@ -301,15 +301,20 @@ public class runwoco {
 				// dos_to_client.write(send_data_client.array(), 0, return_message.length());
 				clientSocket.write(send_data_client);
 			}
-
+			System.out.println("here!!!!");
 			// read any remaining data and directly send to the server
 			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
 			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
 			while (true) {
 				int readyChannels = sel.select();
-
-				if(readyChannels == 0) continue;
-				
+				System.out.println("here!!");
+				if(readyChannels == 0) {
+					if (!scc.isConnected() && !clientSocket.isConnected()) {
+						break;
+					}
+					continue;
+				}
+				System.out.println("here!!!");
 				Set<SelectionKey> selectedKeys = sel.selectedKeys();
 				Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 				while(keyIterator.hasNext()) {
@@ -326,13 +331,10 @@ public class runwoco {
 							bb2.flip();
 							oc.write(bb2);
 							System.out.println(new String(bb2.array()));
-							bb2.clear();
+							bb2.compact();
 						}
 					}
 					keyIterator.remove();
-				}
-				if (!scc.isConnected() && !clientSocket.isConnected()) {
-					break;
 				}
 			}
 //			int con_len_pos = clientString_h.indexOf("content-length");
