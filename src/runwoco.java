@@ -331,9 +331,11 @@ public class runwoco {
 							}
 							System.out.println("aaaa" + readlen);
 							bb2.flip();
+							if (keyIterator.hasNext()) {
 							SelectionKey k2 = keyIterator.next();
 							if (k2.isWritable()) {
 								SocketChannel oc = (SocketChannel) k2.channel();
+								System.out.println(oc.equals(sc));
 								if (!sc.equals(oc)) {
 									oc.configureBlocking(false);
 									oc.register(sel, SelectionKey.OP_WRITE);
@@ -347,6 +349,7 @@ public class runwoco {
 							}
 							System.out.println(new String(bb2.array()));
 							bb2.compact();
+							}
 						}
 						if (readlen == -1) {
 							end = true;
