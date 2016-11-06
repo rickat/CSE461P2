@@ -320,10 +320,8 @@ public class runwoco {
 					SelectionKey key = keyIterator.next();
 					if (key.isReadable()) {
 						SocketChannel sc = (SocketChannel) key.channel();
-						SocketChannel oc = scc;
-						if (sc.equals(scc)) {
-							oc = clientSocket;
-						}
+						sc.configureBlocking(false);
+						sc.register(sel, SelectionKey.OP_READ);
 						int readlen;
 						System.out.println("AAAA");
 						while (true) {
@@ -333,11 +331,19 @@ public class runwoco {
 							}
 							System.out.println("aaaa" + readlen);
 							bb2.flip();
-							try{
-								oc.write(bb2);
-							} catch (IOException e) {
-								end = true;
-								break;
+							SelectionKey k2 = keyIterator.next();
+							if (k2.isWritable()) {
+								SocketChannel oc = (SocketChannel) k2.channel();
+								if (!sc.equals(oc)) {
+									oc.configureBlocking(false);
+									oc.register(sel, SelectionKey.OP_WRITE);
+									try{
+										oc.write(bb2);
+									} catch (IOException e) {
+										end = true;
+										break;
+									}
+								}
 							}
 							System.out.println(new String(bb2.array()));
 							bb2.compact();
