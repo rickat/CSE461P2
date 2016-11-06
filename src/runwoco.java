@@ -325,7 +325,12 @@ public class runwoco {
 							oc = clientSocket;
 						}
 						int readlen;
-						while ((readlen = sc.read(bb2)) > 0) {
+						System.out.println("AAAA");
+						while (true) {
+							readlen = sc.read(bb2); //> 0
+							if (readlen == -1) {
+								break;
+							}
 							System.out.println("aaaa" + readlen);
 							bb2.flip();
 							try{
@@ -336,6 +341,9 @@ public class runwoco {
 							}
 							System.out.println(new String(bb2.array()));
 							bb2.compact();
+						}
+						if (readlen == -1) {
+							end = true;
 						}
 					}
 					keyIterator.remove();
