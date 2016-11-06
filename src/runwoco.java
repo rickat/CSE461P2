@@ -301,8 +301,10 @@ public class runwoco {
 			System.out.println("here!!!!");
 			// read any remaining data and directly send to the server
 			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
-			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
+			ByteBuffer bb2 = ByteBuffer.allocate(1024);
+			System.out.println("ah!");
 			while (true) {
+				System.out.println("ah-ha!");
 				int readyChannels = sel.select();
 				System.out.println("here!!");
 				boolean end = false;
