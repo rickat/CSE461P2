@@ -308,16 +308,18 @@ public class runwoco {
 			while (true) {
 				int readyChannels = sel.select();
 				System.out.println("here!!");
+				boolean end = false;
 				if(readyChannels == 0) {
-					if (!scc.isConnected() && !clientSocket.isConnected()) {
-						break;
-					}
+//					if (!scc.isConnected() && !clientSocket.isConnected()) {
+//						break;
+//					}
 					continue;
 				}
 				System.out.println("here!!!");
 				Set<SelectionKey> selectedKeys = sel.selectedKeys();
 				Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 				while(keyIterator.hasNext()) {
+					
 					SelectionKey key = keyIterator.next();
 					if (key.isReadable()) {
 						SocketChannel sc = (SocketChannel) key.channel();
@@ -329,14 +331,26 @@ public class runwoco {
 						while ((readlen = sc.read(bb2)) > 0) {
 							System.out.println("aaaa" + readlen);
 							bb2.flip();
-							oc.write(bb2);
+							try{
+								oc.write(bb2);
+							} catch (IOException e) {
+								end = true;
+								break;
+							}
 							System.out.println(new String(bb2.array()));
 							bb2.compact();
 						}
 					}
 					keyIterator.remove();
+					if (end) {
+						break;
+					}
+				}
+				if (end) {
+					break;
 				}
 			}
+			System.out.println("here!!!!!!!!!!!!!!!!");
 //			int con_len_pos = clientString_h.indexOf("content-length");
 //			if (con_len_pos != -1) {
 //				int end_con = get_end_line_index(clientString_h, con_len_pos);
