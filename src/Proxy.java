@@ -34,7 +34,7 @@ public class Proxy {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		int port_num = 22333; // should be delete after finish run script
+		int port_num = 22233; // should be delete after finish run script
 		ServerSocket serverSocket = null;
 		try {
 			serverSocket = new ServerSocket(port_num);
@@ -69,7 +69,7 @@ public class Proxy {
 
 		@Override
 		public void run() {
-			ByteBuffer sb;
+			StringBuffer sb;
 			try {
 				sb = client_to_proxy_to_server();
 			} catch (IOException e) {
@@ -80,7 +80,7 @@ public class Proxy {
 		// get request from the client and then
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
-		public ByteBuffer client_to_proxy_to_server() throws IOException {
+		public StringBuffer client_to_proxy_to_server() throws IOException {
 			StringBuffer line_buffer = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
@@ -222,6 +222,8 @@ public class Proxy {
 				dos.write(buffer, 0, readlen);
 			}
 			
+			OutputStream out_to_client = clientSocket.getOutputStream(); 
+			DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
 			String return_message;
 			if(request_line.indexOf("connect") == 0) {
 				// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
@@ -233,8 +235,6 @@ public class Proxy {
 					return_message = new String("HTTP/1.0 502 Bad Gateway\r\n\r\n"); 
 				}
 				System.out.println("out");
-				OutputStream out_to_client = clientSocket.getOutputStream(); 
-				DataOutputStream dos_to_client = new DataOutputStream(out_to_client);
 				ByteBuffer send_data_client = ByteBuffer.allocate(return_message.length());
 				for(int i = 0;i<return_message.length();i++){
 					char temp = return_message.charAt(i);
@@ -243,12 +243,17 @@ public class Proxy {
 				dos_to_client.write(send_data_client.array(), 0, return_message.length());
 			}
 			// starts to get message from the server
+			StringBuffer sb2 = new StringBuffer();
 			while ((readlen = proxy_to_server.getInputStream().read(buffer)) > -1) {
 				// dos_to_client.write(buffer, 0, readlen);
 				String s = new String(buffer);
+				sb2.append(s);
 				System.out.println(s);
 			}
-			return null;
+			assert(!clientSocket.isClosed());
+			String s22 = sb2.toString();
+			dos_to_client.write(s22.getBytes());
+			return sb2;
 		}
 
 		// get data from the server and send that to client
