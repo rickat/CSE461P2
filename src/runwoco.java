@@ -20,6 +20,9 @@ import java.nio.channels.spi.SelectorProvider;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 
 public class runwoco {
@@ -273,16 +276,7 @@ public class runwoco {
 			// OutputStream out = proxy_to_server.getOutputStream(); 
 			// DataOutputStream dos = new DataOutputStream(out);
 			// dos.write(sendData.array(), 0, clientString.length());
-
-			// read any remaining data and directly send to the server
-			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
-			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
-			int readlen;
-			while ((readlen = clientSocket.read(bb2)) > -1) {
-				System.out.println("aaaa" + readlen);
-				scc.write(bb2);
-				System.out.println(new String(bb2.array()));
-			}
+			
 			String return_message;
 			// If the request is connect
 			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
@@ -307,13 +301,75 @@ public class runwoco {
 				// dos_to_client.write(send_data_client.array(), 0, return_message.length());
 				clientSocket.write(send_data_client);
 			}
-			// starts to get message from the server
-			while (scc.read(buffer) > -1) {
-				// dos_to_client.write(buffer, 0, readlen);
-				String s = new String(buffer.array());
-				System.out.println(s);
-				clientSocket.write(buffer);
+
+			// read any remaining data and directly send to the server
+			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
+			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
+			while (true) {
+				int readyChannels = sel.select();
+
+				if(readyChannels == 0) continue;
+				
+				Set<SelectionKey> selectedKeys = sel.selectedKeys();
+				Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
+				while(keyIterator.hasNext()) {
+					SelectionKey key = keyIterator.next();
+					if (key.isReadable()) {
+						SocketChannel sc = (SocketChannel) key.channel();
+						SocketChannel oc = scc;
+						if (sc.equals(scc)) {
+							oc = clientSocket;
+						}
+						int readlen;
+						while ((readlen = sc.read(bb2)) > 0) {
+							System.out.println("aaaa" + readlen);
+							bb2.flip();
+							oc.write(bb2);
+							System.out.println(new String(bb2.array()));
+							bb2.clear();
+						}
+					}
+					keyIterator.remove();
+				}
+				if (!scc.isConnected() && !clientSocket.isConnected()) {
+					break;
+				}
 			}
+//			int con_len_pos = clientString_h.indexOf("content-length");
+//			if (con_len_pos != -1) {
+//				int end_con = get_end_line_index(clientString_h, con_len_pos);
+//				String s = clientString_h.substring(con_len_pos + 16, end_con).trim();
+//				long content_len = Long.parseLong(s);
+//				while (content_len > 0) {
+//					int readlen;
+//					while ((readlen = clientSocket.read(bb2)) > -1 && scc.isOpen() && scc.isConnected() && !scc.socket().isInputShutdown()) {
+//						System.out.println("aaaa" + readlen);
+//						bb2.flip();
+//						scc.write(bb2);
+//						bb2.clear();
+//						System.out.println(new String(bb2.array()));
+//						content_len -= readlen;
+//					}
+//				}
+//			}
+						
+//			int con_len_pos_2 = clientString_h.indexOf("content-length");
+//			if (con_len_pos_2 != -1) {
+//				int end_con = get_end_line_index(clientString_h, con_len_pos);
+//				String s = clientString_h.substring(con_len_pos + 16, end_con).trim();
+//				long content_len = Long.parseLong(s);
+//				// starts to get message from the server
+//				int readlen;
+//				while ((readlen = scc.read(buffer)) > -1) {
+//					// dos_to_client.write(buffer, 0, readlen);
+//					String s2 = new String(buffer.array());
+//					System.out.println(s2);
+//					clientSocket.write(buffer);
+//					content_len -= readlen;
+//				}
+//			}
+//			
+			
 			return null;
 		}
 
