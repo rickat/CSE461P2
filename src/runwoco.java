@@ -47,7 +47,7 @@ public class runwoco {
 			return;
 		}
 		// int port_num = Integer.parseInt(args[0]);
-		InetSocketAddress port_num = new InetSocketAddress(22333);
+		InetSocketAddress port_num = new InetSocketAddress(22233);
 		ServerSocketChannel scs = ServerSocketChannel.open();
 		Selector selector = Selector.open();
 
@@ -305,7 +305,7 @@ public class runwoco {
 			// read any remaining data and directly send to the server
 			ByteBuffer buffer = ByteBuffer.allocate(1024 * 5);
 			ByteBuffer bb2 = ByteBuffer.allocate(1024 * 5);
-			while (true) {
+/*			while (true) {
 				int readyChannels = sel.select();
 				System.out.println("here!!");
 				boolean end = false;
@@ -350,24 +350,24 @@ public class runwoco {
 					break;
 				}
 			}
-			System.out.println("here!!!!!!!!!!!!!!!!");
-//			int con_len_pos = clientString_h.indexOf("content-length");
-//			if (con_len_pos != -1) {
-//				int end_con = get_end_line_index(clientString_h, con_len_pos);
-//				String s = clientString_h.substring(con_len_pos + 16, end_con).trim();
-//				long content_len = Long.parseLong(s);
-//				while (content_len > 0) {
-//					int readlen;
-//					while ((readlen = clientSocket.read(bb2)) > -1 && scc.isOpen() && scc.isConnected() && !scc.socket().isInputShutdown()) {
-//						System.out.println("aaaa" + readlen);
-//						bb2.flip();
-//						scc.write(bb2);
-//						bb2.clear();
-//						System.out.println(new String(bb2.array()));
-//						content_len -= readlen;
-//					}
-//				}
-//			}
+			System.out.println("here!!!!!!!!!!!!!!!!");*/
+			int con_len_pos = clientString_h.indexOf("content-length");
+			if (con_len_pos != -1) {
+				int end_con = get_end_line_index(clientString_h, con_len_pos);
+				String s = clientString_h.substring(con_len_pos + 16, end_con).trim();
+				long content_len = Long.parseLong(s);
+				while (content_len > 0) {
+					int readlen;
+					while ((readlen = clientSocket.read(bb2)) > -1 && scc.isOpen() && scc.isConnected() && !scc.socket().isInputShutdown()) {
+						System.out.println("aaaa" + readlen);
+						bb2.flip();
+						scc.write(bb2);
+						bb2.clear();
+						System.out.println(new String(bb2.array()));
+						content_len -= readlen;
+					}
+				}
+			}
 						
 //			int con_len_pos_2 = clientString_h.indexOf("content-length");
 //			if (con_len_pos_2 != -1) {
@@ -375,14 +375,14 @@ public class runwoco {
 //				String s = clientString_h.substring(con_len_pos + 16, end_con).trim();
 //				long content_len = Long.parseLong(s);
 //				// starts to get message from the server
-//				int readlen;
-//				while ((readlen = scc.read(buffer)) > -1) {
-//					// dos_to_client.write(buffer, 0, readlen);
-//					String s2 = new String(buffer.array());
-//					System.out.println(s2);
-//					clientSocket.write(buffer);
+				int readlen;
+				while ((readlen = scc.read(buffer)) > -1) {
+					// dos_to_client.write(buffer, 0, readlen);
+					String s2 = new String(buffer.array());
+					System.out.println(s2);
+					clientSocket.write(buffer);
 //					content_len -= readlen;
-//				}
+				}
 //			}
 //			
 			
