@@ -264,11 +264,7 @@ public class runwoco {
 				}
 
 			}
-			assert(scc == null);
-			assert(scc != null);
 			System.out.println(scc.isConnected());
-			assert(scc == null);
-			assert(scc != null);
 			System.out.println(scc == null);
 			System.out.println(sel == null);
 			assert(sel != null);
