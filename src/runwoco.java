@@ -326,6 +326,7 @@ public class runwoco {
 						System.out.println("AAAA");
 						while (true) {
 							readlen = sc.read(bb2); //> 0
+							System.out.println(readlen);
 							if (readlen == -1) {
 								break;
 							}
