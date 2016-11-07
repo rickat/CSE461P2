@@ -89,7 +89,6 @@ public class Proxy {
 				line_buffer.append((char)cur_byte);
 				if (cur_byte == '\n') {
 					String cur_line = line_buffer.toString();
-					System.out.println(cur_line);
 					clientData.append(cur_line);
 					if (cur_line.equals("\r\n")) { //read the end of header, break
 						break;
@@ -158,6 +157,14 @@ public class Proxy {
 					String port = name.substring(port_start + 1, http_version).trim();
 					port_num = Integer.parseInt(port); // update port
 				}
+			}
+			
+			int contentLengthIndex = clientString_h.indexOf("content-length");
+			int contentLength = 0;
+			if (contentLengthIndex != -1) {
+				int i = get_end_line_index(clientString_h, contentLengthIndex);
+				String trimed = clientString_h.substring(contentLengthIndex, i).split(":")[1].trim();
+				contentLength = Integer.parseInt(trimed);
 			}
 			// we have updated all possible port num above
 			
