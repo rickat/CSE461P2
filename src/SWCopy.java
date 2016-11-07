@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -83,15 +84,21 @@ public class SWCopy {
 			ByteBuffer sb;
 			try {
 				sb = client_to_proxy_to_server();
-			} catch (IOException e) {
+			}  catch (UnknownHostException u) {
+				u.printStackTrace();
+			}catch (IOException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
 
 		// get request from the client and then
 		// get client's request to the server and receive the server's respond
 		// then get the server's respond
-		public ByteBuffer client_to_proxy_to_server() throws IOException {
+		public ByteBuffer client_to_proxy_to_server() throws Exception {
 			StringBuffer sb = new StringBuffer();
 			StringBuffer clientData = new StringBuffer();
 			while (true) {
@@ -152,66 +159,71 @@ public class SWCopy {
 			// get time
 			DateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm:ss");
 			Calendar cal = Calendar.getInstance();
-            //print request line
-			InetAddress address = InetAddress.getByName(name); 
-			System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
-			int version_num = clientString_h.indexOf("http/1.1");
-			assert(version_num != -1);
-			String request_line_2 = request_line.substring(change_version, version_num).trim();
-			System.out.println(dateFormat.format(cal.getTime()) + " - >>>" + request_line_2);
-			// change http version number
-			clientString = clientString.substring(0, version_num + 7) + "0" + clientString.substring(version_num + 8);
-			// end change version number
+			//print request line
+			try{
+				InetAddress address = InetAddress.getByName(name); 
+				System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
+				int version_num = clientString_h.indexOf("http/1.1");
+				assert(version_num != -1);
+				String request_line_2 = request_line.substring(change_version, version_num).trim();
+				System.out.println(dateFormat.format(cal.getTime()) + " - >>>" + request_line_2);
+				// change http version number
+				clientString = clientString.substring(0, version_num + 7) + "0" + clientString.substring(version_num + 8);
+				// end change version number
 
-			// change keep alive
-			int status_start = clientString_h.indexOf("keep-alive");
-			clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
-			// end change keep alive
+				// change keep alive
+				int status_start = clientString_h.indexOf("keep-alive");
+				clientString = clientString.substring(0, status_start) + "close" + clientString.substring(status_start + 10);
+				// end change keep alive
 
-			// NOTE: Host Name: name
-			//	 	 Port     : port_num
-			// 		 Header   : clientString
-			//		 Payload  : remainData
-			//
-			// To Do: 1. Establish connection with the host
-			//		  2. If succeeded, send a 200 back to client, otherwise send 502
-			//		  3. Send clientString to host via a SocketChannel (DNS of name and port at port_num)
-			//		  4. Receive host's response via SocktChannel
+				// NOTE: Host Name: name
+				//	 	 Port     : port_num
+				// 		 Header   : clientString
+				//		 Payload  : remainData
+				//
+				// To Do: 1. Establish connection with the host
+				//		  2. If succeeded, send a 200 back to client, otherwise send 502
+				//		  3. Send clientString to host via a SocketChannel (DNS of name and port at port_num)
+				//		  4. Receive host's response via SocktChannel
 
-			assert(sel != null);
-			// scc.register(sel, SelectionKey.OP_READ);
+				assert(sel != null);
+				// scc.register(sel, SelectionKey.OP_READ);
 
-			// If the request is connect
-			// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
-			System.out.println(clientString);
-			int cpos = request_line.indexOf("connect");
-			if (cpos != -1) {
-				System.out.println("handling connect");
-				handleConnect(name, port_num);
-			} else {
-				System.out.println("handling non connect");
-				try {
-					handleNonConnect(clientString,clientString_h, name, port_num);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				// If the request is connect
+				// send back 200 OK or 502 Bad Gateway based on whether or not we can establish a connection with the host
+				//System.out.println(clientString);
+				int cpos = request_line.indexOf("connect");
+				if (cpos != -1) {
+					//System.out.println("handling connect");
+					handleConnect(name, port_num);
+				} else {
+					//System.out.println("handling non connect");
+					try {
+						handleNonConnect(clientString,clientString_h, name, port_num);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
+				return null;
+			}catch(UnknownHostException u) {
+				return null;
 			}
-			return null;
 		}
 
-		public void handleNonConnect(String clientString, String clientString_h, String name, int port_num) throws Exception {
+		public void handleNonConnect(String clientString, String clientString_h, String name, int port_num) throws IOException {
 			Socket ss = new Socket(name, port_num);
 			ss.getOutputStream().write(clientString.getBytes());
 			int contentLengthIndex = clientString_h.indexOf("content-length");
 			int contentLength = 0;
 			if (contentLengthIndex != -1) {
 				int i = get_end_line_index(clientString_h, contentLengthIndex);
-				int length_index = clientString_h.indexOf(":");
-				String trimed = clientString_h.substring(contentLengthIndex, i).substring(length_index+1);
-				contentLength = Integer.parseInt(trimed.trim());
+				String trimed_1 = clientString_h.substring(contentLengthIndex, i);
+				int length_index = trimed_1.indexOf(":");
+				assert(length_index != -1);
+				String trimed_2 = trimed_1.substring(length_index+1);
+				contentLength = Integer.parseInt(trimed_2.trim());
 			}
-			
+
 			byte[] buf = new byte[1024];
 			if (contentLength > 0) {
 				while (contentLength > 0) {
@@ -225,8 +237,12 @@ public class SWCopy {
 			OutputStream browserOutput = clientSocket.socket().getOutputStream();
 			int byteRead = serverInput.read(buf);
 			while (byteRead != -1) {
-				browserOutput.write(buf, 0, byteRead);
-				byteRead = serverInput.read(buf);
+				try {
+					browserOutput.write(buf, 0, byteRead);
+					byteRead = serverInput.read(buf);
+				}catch(IOException i) {
+					continue;
+				}
 			}
 		}
 
@@ -246,13 +262,12 @@ public class SWCopy {
 				return;
 			}
 
-			System.out.println("return message is:" + return_message);
+			//System.out.println("return message is:" + return_message);
 			scc.configureBlocking(false);
 			clientSocket.configureBlocking(false);
 			scc.register(sel, SelectionKey.OP_READ);
 			clientSocket.register(sel, SelectionKey.OP_READ);
 			ByteBuffer bb2 = ByteBuffer.allocate(1024);
-			// System.out.println("ah!");
 			boolean isClosed = false;
 			while (!isClosed) {
 				int readyChannels = sel.select();
@@ -261,43 +276,48 @@ public class SWCopy {
 				Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
 				while(keyIterator.hasNext()) {
 					bb2.clear();
-
 					SelectionKey key = keyIterator.next();
 					SocketChannel sc = (SocketChannel)key.channel();
-					if (sc.equals(clientSocket)) {
-						// broswer case
-						int readlen = sc.read(bb2);
-						if (readlen == -1) {
-							isClosed = true;
-							break;
-						}
-						bb2.flip();
-						while (bb2.hasRemaining()) {
-							try {
-								scc.write(bb2);
-							} catch(IOException e) {
-								isClosed = true;
-								break;
-							}
-						}
+					try{
+						if (sc.equals(clientSocket)) {
+							// browser case
 
-					} else if (sc.equals(scc)) {
-						// server case
-						int readlen = sc.read(bb2);
-						if (readlen == -1) {
-							isClosed = true;
-							break;
-						}
-						bb2.flip();
-						while (bb2.hasRemaining()) {
-							try {
-								clientSocket.write(bb2);
-							} catch(IOException e) {
+							int readlen = sc.read(bb2);
+							if (readlen == -1) {
 								isClosed = true;
 								break;
 							}
+							bb2.flip();
+							while (bb2.hasRemaining()) {
+								try {
+									scc.write(bb2);
+								} catch(IOException e) {
+									isClosed = true;
+									break;
+								}
+							}
+
+						} else if (sc.equals(scc)) {
+							// server case
+							int readlen = sc.read(bb2);
+							if (readlen == -1) {
+								isClosed = true;
+								break;
+							}
+							bb2.flip();
+							while (bb2.hasRemaining()) {
+								try {
+									clientSocket.write(bb2);
+								} catch(IOException e) {
+									isClosed = true;
+									break;
+								}
+							}
 						}
+					}catch(IOException i){
+						// abort quietly
 					}
+
 				}
 				selectedKeys.clear();
 			}
@@ -313,19 +333,16 @@ public class SWCopy {
 			int flen = first.length;
 			int slen = second.length;
 			byte[] res = new byte[flen + slen];
-			System.arraycopy(first, 0, res, 0, flen);
-			System.arraycopy(second, 0, res, flen, slen);
+			//System.arraycopy(first, 0, res, 0, flen);
+			//System.arraycopy(second, 0, res, flen, slen);
 			return res;
 		}
 
 		// a method that tells the ending of each line in the header
 		public static int get_end_line_index(String s, int start) {
 			int cand1 = s.indexOf("\r", start);
-			// System.out.println(cand1);
 			int cand2 = s.indexOf("\n", start);
-			// System.out.println(cand2);
 			int end_host = s.indexOf("\r\n", start);
-			// System.out.println(end_host);
 			if (cand1 != end_host || cand2 != end_host +2) {
 				end_host = Math.min(cand1, cand2);
 			}
