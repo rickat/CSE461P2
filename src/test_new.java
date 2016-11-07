@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 /**
  * 
@@ -14,7 +16,10 @@ public class test_new {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		// TODO Auto-generated method stu
+		
+		
+		String test_string_a = "GET    https://www.my.example.page.com/ HTTP/1.1 \r\n";
 		String test_string = "GET  https://www.my.example.page.com/ HTTP/1.1 \r\n";
 		test_string += "Host:  www.my.example.page.com   \n";
 		test_string += "User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0\r\n";
@@ -26,6 +31,100 @@ public class test_new {
 		
 		String clientString = test_string;
 
+		String[] fl = test_string_a.split("\\s+");
+		
+		for (String s : fl) {
+			System.out.println(s);
+		}
+		
+		StringBuffer sb = new StringBuffer();
+		StringBuffer clientData = new StringBuffer();
+		ArrayList<String> alist = new ArrayList<String>();
+		for (int i = 0; i < test_string.length(); i++) {
+			char c = test_string.charAt(i);
+			sb.append(c);
+			if (c == '\n') {
+				String s = sb.toString();
+				clientData.append(s);
+				alist.add(s);
+				if (s.equals("\r\n")) {
+					break;
+				} else {
+					sb = new StringBuffer();
+				}
+			}
+		}
+		String clientString1 = clientData.toString();
+		String clientString_h = clientString1.toLowerCase();
+		//System.out.println(clientString);
+		String connection = null;
+		String request = alist.get(0);
+		String host = null;
+		int conn_index = -1;
+		for (int i = 0; i < alist.size(); i++) {
+			String s = alist.get(i);
+			String sx = s.toLowerCase();
+			if (sx.contains("connection")) {
+				connection = s;
+				conn_index = i;
+			} else if (sx.contains("host")) {
+				host = s;
+			}
+		}
+		// reqA[0] = request type; reqA[1] = host + port; reqA[2] = http version
+		String[] reqA = request.split("\\s+");
+		// hostA[0] = HOST:; hostA[1] = host + port
+		String[] hostA = host.split("\\s+");
+		// connA[0] = CONNECTION:; connA[1] = keep-alive
+		String[] connA = connection.split("\\s+");
+		// new connection line
+		String new_conn = connA[0] + " close";
+		// new request line
+		String new_vers = reqA[0] + " " + reqA[1] + " " + "HTTP/1.0\r\n";
+		alist.set(conn_index, new_conn);
+		alist.set(0, new_vers);
+		
+		int hostport = 80;
+		String hostname = null;
+		
+		// get host name
+		// hR[0] = http; hR[1] = hostname; hR[2] = port num
+		System.out.println("======================================" + reqA[1]);
+		String[] hostname_R = reqA[1].split(":");
+		if (hostname_R[0].contains("https")) {
+			hostport = 443;
+		}
+//		if (hostname_R.length > 2) {
+//			System.out.println("-------------------------"+hostname_R[2].trim());
+//			hostport = Integer.parseInt(hostname_R[2].trim());
+//		}
+		// hh[0] = hostname; hh[1] = port num
+		String[] hostname_H = hostA[1].split(":");
+		if (hostname_H.length > 1) {
+			hostport = Integer.parseInt(hostname_H[1].trim());
+		}
+		hostname = hostname_H[0].trim();
+		
+		//System.out.println(hostname);
+		//System.out.println(hostport);
+		for (String s : alist) {
+			System.out.println("a " + s);
+		}
+		System.out.println("++++++++++++++++++++++++++++++" + hostname);
+		System.out.println("------------------------------" + hostport);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+/*		
+		
 		// find the destination (Can be put into a separate method)
 		// a lower case version of the client data, so that it will be case insensitive
 		String clientString_h = clientString.toLowerCase();
@@ -104,7 +203,7 @@ public class test_new {
 		System.out.println(clientString);
 		System.out.println(name);
 		System.out.println(host_name);
-		System.out.println(port_num);
+		System.out.println(port_num);*/
 	}
 	
 	// get data from the server and send that to client
