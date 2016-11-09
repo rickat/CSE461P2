@@ -30,12 +30,15 @@ public class Proxy {
 	 * @param args
 	 * @throws IOException 
 	 */
-	@SuppressWarnings("resource")
+	// @SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 		if (args.length > 1) {
 			System.err.println("too many args");
 			return;
 		}
+		// get time
+		DateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
 		int port_num_enter = Integer.parseInt(args[0]);
 		// InetSocketAddress port_num = new InetSocketAddress(22233);
 		InetSocketAddress port_num = new InetSocketAddress(port_num_enter);
@@ -43,8 +46,9 @@ public class Proxy {
 
 
 		try {
-			System.out.println("yyyy");
+			// System.out.println("yyyy");
 			scs.socket().bind(port_num);
+			System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on 0.0.0.0:" + port_num_enter);
 			// System.out.println("xxxx");
 			//			scs.configureBlocking(false);
 			// scs.register(selector, SelectionKey.OP_ACCEPT); 
@@ -55,24 +59,27 @@ public class Proxy {
 		while(true){
 			SocketChannel client = scs.accept();
 			if (client != null) {
-				new Thread(new Client_handler(client)).start();
+				new Thread(new Client_handler(client, cal, dateFormat)).start();
 			}		}
 	}
 
 	static class Client_handler implements Runnable {
 		public SocketChannel clientSocket;
 		public Selector sel;
+		public Calendar cal;
+		public DateFormat dateFormat;
 
-		public Client_handler(SocketChannel socket) throws IOException {
+		public Client_handler(SocketChannel socket, Calendar cal, DateFormat dateFormat) throws IOException {
 			this.sel = Selector.open();
-			clientSocket = socket;
+			this.clientSocket = socket;
+			this.cal = cal;
+			this.dateFormat = dateFormat;
 		}
 
 		@Override
 		public void run() {
-			ByteBuffer sb;
 			try {
-				sb = client_to_proxy_to_server();
+				client_to_proxy_to_server();
 			}  catch (UnknownHostException u) {
 				u.printStackTrace();
 			}catch (IOException e) {
@@ -144,14 +151,16 @@ public class Proxy {
 			int https = request_line.indexOf("https://");
 			if (https != -1 && port_num == 80) {
 				port_num = 443;
-			}			
+			}
+			/*
 			// get time
 			DateFormat dateFormat = new SimpleDateFormat("dd MMM HH:mm:ss");
 			Calendar cal = Calendar.getInstance();
+			*/
 			//print request line
 			try{
-				InetAddress address = InetAddress.getByName(name); 
-				System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
+				// InetAddress address = InetAddress.getByName(name); 
+				// System.out.println(dateFormat.format(cal.getTime()) + " - Proxy listening on " + address.getHostAddress() + ":" + port_num);
 				int version_num = clientString_h.indexOf("http/1.1");
 				assert(version_num != -1);
 				String request_line_2 = request_line.substring(change_version, version_num).trim();
@@ -310,11 +319,6 @@ public class Proxy {
 				}
 				selectedKeys.clear();
 			}
-		}
-
-		// get data from the server and send that to client
-		public void proxy_to_client(StringBuilder sb) throws IOException {
-
 		}
 
 		// connect two arrays together
