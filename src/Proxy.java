@@ -18,17 +18,13 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Set;
 
-
+/**
+ * @author Yilun Hua (1428927) Shen Wang (1571169)
+ *
+ */
 public class Proxy {
 
-	/**
-	 * 
-	 */
-
-	/**
-	 * @author Yilun Hua (1428927) Shen Wang (1571169)
-	 *
-	 */
+	
 
 	/**
 	 * @param args
